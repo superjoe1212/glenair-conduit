@@ -1,0 +1,130 @@
+
+// set variables
+
+speed = 0
+begin = 1
+end = 2
+cycles = 3
+pattern = 4
+finish = 5
+ready = 6
+done = 7
+
+// get the speed and update axis parameter 4
+
+GGP speed, 2  	//get user variable 0
+AAP 4, 0	   		//reset maximum positioning speed [pps]
+
+// get and copy the start and end coordinates
+
+GGP begin, 2  	//get user variable 1
+ACO begin, 0		//set starting coordinate
+
+GGP end, 2 		//get user variable 2
+ACO end, 0		//set ending coordinate
+
+// initialize motor
+
+MVP COORD, 0, begin
+WAIT POS, 0, 0
+
+SGP cycles, 2, 0
+SGP finish, 2, 0
+SGP ready, 2, 0
+SGP done, 2, 0
+
+GGP pattern, 2
+COMP 0
+JC EQ, SoloTest
+COMP 1
+JC EQ, DualFirst
+COMP 2
+JC EQ, DualSecond
+COMP 3
+JC EQ, DualTest
+STOP
+
+// run one motor test
+
+SoloTest:
+	MVP COORD, 0, end
+	WAIT POS, 0, 0
+	MVP COORD, 0, begin
+	GGP cycles, 2
+	CALC ADD, 1
+	AGP cycles, 2
+	WAIT POS, 0, 0
+	WAIT TICKS, 0, 30
+	GGP finish, 2
+	COMP 1
+	JC EQ, Exit
+	JA SoloTest
+
+// run first in two motor test
+
+DualFirst:
+	MVP COORD, 0, end
+	WAIT POS, 0, 0
+	SGP done, 2, 1
+	CSUB Poll
+	MVP COORD, 0, begin
+	WAIT POS, 0, 0
+	SGP done, 2, 1
+	CSUB Poll
+	WAIT TICKS, 0, 30
+	GGP finish, 2
+	COMP 1
+	JC EQ, Exit
+	JA DualFirst
+
+// run second in two motor test
+
+DualSecond:
+	CSUB Poll
+	MVP COORD, 0, end
+	WAIT POS, 0, 0
+	SGP done, 2, 1
+	CSUB Poll
+	MVP COORD, 0, begin
+	WAIT POS, 0, 0
+	SGP done, 2, 1
+	GGP cycles, 2
+	CALC ADD, 1
+	AGP cycles, 2
+	WAIT TICKS, 0, 30
+	GGP finish, 2
+	COMP 1
+	JC EQ, Exit
+	JA DualSecond
+
+// run together in two motor test
+
+DualTest:
+	MVP COORD, 0, end
+	WAIT POS, 0, 0
+	SGP done, 2, 1
+	CSUB Poll
+	MVP COORD, 0, begin
+	WAIT POS, 0, 0
+	SGP done, 2, 1
+	CSUB Poll
+	GGP cycles, 2
+	CALC ADD, 1
+	AGP cycles, 2
+	WAIT TICKS, 0, 30
+	GGP finish, 2
+	COMP 1
+	JC EQ, Exit
+	JA DualTest
+
+Poll:
+	GGP ready, 2
+	COMP 1
+	JC NE, Poll
+	SGP done, 2, 0
+	SGP ready, 2, 0
+	RSUB
+
+Exit:
+	STOP
+
