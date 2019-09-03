@@ -10,8 +10,6 @@ Download this repository to the raspberry pi.
 
 Use a terminal window to execute
 
-'''
-python3 coduitgui.py
-'''
+    python3 coduitgui.py
 
 in the applicable directory.
