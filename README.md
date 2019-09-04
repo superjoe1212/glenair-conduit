@@ -39,7 +39,7 @@ While still in the Glenair directory, enter this command in the Terminal to down
 
 In order to create a Desktop shortcut for running the interface, move the file named "glenairtest.desktop" from the Glenair folder to the Desktop and the icon will appear.
 
-To initialize the On/Off switch for the Raspberry Pi, enter this command in the Terminal
+To initialize the On/Off switch for the Raspberry Pi, enter this command in the Terminal.
 
     sudo nano /etc/rc.local
     
