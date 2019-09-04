@@ -20,10 +20,11 @@ Create a folder for the project files on the Desktop named "Glenair". In a termi
 
     cd /home/pi/Desktop/Glenair
 
-Follow with these commands to install the TMCL serial interface created by NativeDesign.
+Follow with these commands to install the TMCL serial interface created by NativeDesign and guizero, a simple GUI creator for Python.
 
     git clone https://github.com/NativeDesign/python-tmcl.git
     python setup.py install
+    sudo apt-get install python-guizero
     
 ### Installing
 
@@ -63,4 +64,5 @@ Doubleclicking on the Conduit Test icon will open the GUI and allow for paramete
 ## Author
 
 Kylie Fernandez
-(661) 742-7525
+
+Questions? Email kylie_fern@yahoo.com
