@@ -20,21 +20,11 @@ After rebooting, enter this command in the Terminal to download guizero, a simpl
 
     sudo apt-get install python-guizero
 
-Create a folder for the project files on the Desktop named "Glenair". In the Terminal, enter this command to navigate to the new directory.
-
-    cd Desktop/Glenair
-
-Follow with these commands to install the TMCL serial interface created by NativeDesign.
-
-    git clone https://github.com/NativeDesign/python-tmcl.git
-    python setup.py install
-    
-At this point, all files in the Glenair folder may be moved to trash with the exception of the folder named "TMCL". _This is an optional step._
-    
 ### Installing
 
-While still in the Glenair directory, enter this command in the Terminal to download the GUI repository.
+Create a folder for the project files on the Desktop named "Glenair". In the Terminal, enter these commands to navigate to the new directory and download the GUI repository.
 
+    cd Desktop/Glenair
     git clone https://github.com/kyliefern/glenair-conduit.git
 
 In order to create a Desktop shortcut for running the interface, move the file named "glenairtest.desktop" from the Glenair folder to the Desktop and the icon will appear.
