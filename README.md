@@ -29,6 +29,8 @@ Follow with these commands to install the TMCL serial interface created by Nativ
     git clone https://github.com/NativeDesign/python-tmcl.git
     python setup.py install
     
+At this point, all files in the Glenair folder may be moved to trash with the exception of the folder named "TMCL". _This is an optional step._
+    
 ### Installing
 
 While still in the Glenair directory, enter this command in the Terminal to download the GUI repository.
