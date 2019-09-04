@@ -8,58 +8,72 @@ Follow these instructions to get a new copy of the project up and running on a R
 
 ### Prerequisites
 
-Connect the Raspberry Pi to Wi-Fi using the icon in the upper right hand corner of the desktop. Alternatively, open the control box and use the ethernet port to create a wired internet connection.
+Connect the Raspberry Pi to Wi-Fi using the icon in the upper right hand corner of the Desktop. Alternatively, open the control box and use the ethernet port to create a wired internet connection.
 
-Ensure the Raspberry Pi software is up to date by entering these commands one by one in a terminal window. _This may take a few minutes to complete._
+Ensure the Raspberry Pi software is up to date by opening the Terminal window and entering these commands one by one. _This may take a few minutes to complete._
 
     sudo apt-get update
     sudo apt-get upgrade
     sudo reboot
 
-Create a folder for the project files on the Desktop named "Glenair". In a terminal, enter this command to navigate to the new directory.
+After rebooting, enter this command in the Terminal to download guizero, a simple GUI creator for Python.
 
-    cd /home/pi/Desktop/Glenair
+    sudo apt-get install python-guizero
 
-Follow with these commands to install the TMCL serial interface created by NativeDesign and guizero, a simple GUI creator for Python.
+Create a folder for the project files on the Desktop named "Glenair". In the Terminal, enter this command to navigate to the new directory.
+
+    cd Desktop/Glenair
+
+Follow with these commands to install the TMCL serial interface created by NativeDesign.
 
     git clone https://github.com/NativeDesign/python-tmcl.git
     python setup.py install
-    sudo apt-get install python-guizero
     
 ### Installing
 
-While still in the project folder directory, enter this terminal command to download the GUI.
+While still in the Glenair directory, enter this command in the Terminal to download the GUI repository.
 
     git clone https://github.com/kyliefern/glenair-conduit.git
 
-In order to create a desktop shortcut for running the interface, create an empty file named, "conduit_test.desktop" within the Desktop directory.
+In order to create a Desktop shortcut for running the interface, make an empty file named "conduit_test.desktop" within the Desktop directory.
 
 Add this text to the file,
 
     [Desktop Entry]
     Name=Conduit Test
+    Comment=Application to run a fatigue test
     Icon=/usr/share/pixmaps/pstree32.xpm
-    Exec=python3 conduitgui.py
+    Exec=python3 /home/pi/Desktop/Glenair/conduitgui.py
     Type=Application
     Terminal=false
     
-The shortcut icon should appear on the desktop.
+Save this file and the shortcut icon should appear on the Desktop.
+
+To initialize the On/Off switch for the Raspberry Pi, enter this command in the Terminal
+
+    sudo nano /etc/rc.local
+    
+Add this line right above "exit 0".
+
+    python3 /home/pi/Desktop/Glenair/switch.py &
+    
+Press Ctrl-X, Y, and Enter to save and exit. The switch will not be active until the Raspberry Pi is rebooted again.
 
 ## Running Tests
 
-At this point, the software is capable of running tests. Should the GUI need to be altered, edit the file named conduitgui.py. If the motors are not being set up correctly, check the file motorsetup.py for errors.
+At this point, the software is capable of running tests. Should the GUI need to be altered, make changes to the file named "conduitgui.py". If the motors are not being set up correctly, check the file named "motorsetup.py" for errors.
 
 ### Demo
 
-In order to check motor functionality, a simple test may be run by entering this command in a terminal.
+In order to check motor functionality, a simple test may be run by entering this command in the Terminal.
 
-    python3 /home/pi/Desktop/Glenair/motortest.py
+    python3 Desktop/Glenair/motortest.py
     
-The motors should take turns spinning a quarter revolution and back four times.
+The motors should take turns rotating 180 degrees four times.
 
 ### Fatigue Test
 
-Doubleclicking on the Conduit Test icon will open the GUI and allow for parameter selection and test control. Futher information is available in the project documentation.
+Double-clicking on the Conduit Test icon will open the GUI and allow for parameter selection and test control. Futher information is available in the project documentation.
 
 ## Author
 
