@@ -37,19 +37,7 @@ While still in the Glenair directory, enter this command in the Terminal to down
 
     git clone https://github.com/kyliefern/glenair-conduit.git
 
-In order to create a Desktop shortcut for running the interface, make an empty file named "conduit_test.desktop" within the Desktop directory.
-
-Add this text to the file,
-
-    [Desktop Entry]
-    Name=Conduit Test
-    Comment=Application to run a fatigue test
-    Icon=/usr/share/pixmaps/pstree32.xpm
-    Exec=python3 /home/pi/Desktop/Glenair/conduitgui.py
-    Type=Application
-    Terminal=false
-    
-Save this file and the shortcut icon should appear on the Desktop.
+In order to create a Desktop shortcut for running the interface, move the file named "glenairtest.desktop" from the Glenair folder to the Desktop and the icon will appear.
 
 To initialize the On/Off switch for the Raspberry Pi, enter this command in the Terminal
 
