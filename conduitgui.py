@@ -5,234 +5,259 @@
 # guizero documentation https://lawsie.github.io/guizero/
 from guizero import App, Window, Box, Text, TextBox, Slider, PushButton, CheckBox, ButtonGroup
 import motorsetup
-from time import sleep
 from gpiozero import Button
+
 
 sm_mot,sm_axis,big_mot,big_axis = motorsetup.start()                    # create motor and axis objects
 
-switch = Button(13)                                                     # create emergency stop switch object
 
-def e_stop():                                                           # send commands to stop motor applications
-    sm_mot.send(128,0,0,0)                              
+def e_stop():                                                           
+    sm_mot.send(128,0,0,0)                                              # stop motor applications
     big_mot.send(128,0,0,0)                            
 
-def all_stop():                                                         # send commands to stop motor movement
-    sm_mot.stop()                                             
+
+def all_stop():                                                         
+    sm_mot.stop()                                                       # stop motor movement
     big_mot.stop()
 
+
+switch = Button(13)                                                     # create emergency stop switch object
 switch.when_pressed = e_stop                                            # set up function to call when switched
 switch.when_released = all_stop                                         # set up function to call when released
 
+
 def two_motor():
     global total
-    sm_ready = sm_mot.get_user_var(7)
-    if sm_ready == 1:
-        sm_mot.set_user_var(6,1)
-    big_ready = big_mot.get_user_var(7)
-    if big_ready == 1:
-        big_mot.set_user_var(6,1)
-    sm_check = sm_mot.get_user_var(3)
-    if sm_check >= total:
-        sm_mot.set_user_var(5,1)
-    big_check = big_mot.get_user_var(3)
-    if big_check >= total:
-        big_mot.set_user_var(5,1)
-    if sm_check or big_check >= total:
-        mot_activity()
-        sm_mot_on.enable()
+    sm_done = False
+    big_done = False
+    sm_ready = sm_mot.get_user_var(7)                                   # get small motor user variable 7 (ready flag)
+    if sm_ready == 1:                                                   # if small motor ready,
+        big_mot.set_user_var(6,1)                                       # set big motor user variable 6 to one (done flag)
+    big_ready = big_mot.get_user_var(7)                                 # get big motor user variable 7 (ready flag)
+    if big_ready == 1:                                                  # if big motor ready,
+        sm_mot.set_user_var(6,1)                                        # set small motor user variable 6 to one (done flag)
+    sm_check = sm_mot.get_user_var(3)                                   # get small motor user variable 3 (cycles check)
+    if sm_check >= total:                                               # if cycles check is greater than or equal to total test cycles,
+        sm_mot.set_user_var(5,1)                                        # set small motor user variable 5 to one (finished flag)
+        sm_done = True
+    big_check = big_mot.get_user_var(3)                                 # get big motor user variable 3 (cycles check)
+    if big_check >= total:                                              # if cycles check is greater than or equal to total test cycles,
+        big_mot.set_user_var(5,1)                                       # set big motor user variable 5 to one (finished flag)
+        big_done = True
+    if sm_done and big_done == True:                                    # if both motors finished,                  
+        sm_mot_on.enable()                                              # enable motor status checkboxes
         big_mot_on.enable()
-        reset_button.enable()
+        mot_activity()                                                  # call motor activity function
+        reset_button.enable()                                           # enable reset button
         reset_button.bg = 'sky blue'
-        start_button.enable()
+        start_button.enable()                                           # enable start button
         start_button.bg = 'green'
-        stop_button.disable()
+        stop_button.disable()                                           # disable stop button
         stop_button.bg = 'light salmon'
-        run_text.hide()
-        run_text.cancel(color)
-        done_text.enable()
-        app.cancel(two_motor)
-    counter_text.value = 'Cycles completed: ' + str(big_check)
+        run_text.hide()                                                 # hide test running text
+        run_text.cancel(color)                                          # cancel scheduled call to test running text color function
+        done_text.enable()                                              # enable test finished text
+        app.cancel(two_motor)                                           # cancel scheduled call to two-motor function
+    counter_text.value = 'Cycles completed: ' + str(big_check)          # update cycle counter text
+
 
 def one_motor(motor,axis):
     global total
-    check = motor.get_user_var(3)
-    if check >= total:
-        motor.set_user_var(5,1)
-        mot_activity()
-        sm_mot_on.enable()
-        big_mot_on.enable()
-        reset_button.enable()
+    check = motor.get_user_var(3)                                       # get user variable 3 (cycles check)
+    if check >= total:                                                  # if cycles check is greater than or equal to total test cycles,
+        motor.set_user_var(5,1)                                         # set user variable 5 to one (finished flag)
+        sm_mot_on.enable()                                              # enable motor status checkboxes
+        big_mot_on.enable()                                             
+        mot_activity()                                                  # call motor activity function
+        reset_button.enable()                                           # enable reset button
         reset_button.bg = 'sky blue'
-        start_button.enable()
+        start_button.enable()                                           # enable start button
         start_button.bg = 'green'
-        stop_button.disable()
+        stop_button.disable()                                           # disable stop button
         stop_button.bg = 'light salmon'
-        run_text.hide()
-        run_text.cancel(color)
-        done_text.show()
-        app.cancel(one_motor)
-    counter_text.value = 'Cycles completed: ' + str(check)    
+        run_text.hide()                                                 # hide test running text
+        run_text.cancel(color)                                          # cancel scheduled call to test running text color function
+        done_text.show()                                                # show test finished text
+        app.cancel(one_motor)                                           # cancel scheduled call to one-motor test function
+    counter_text.value = 'Cycles completed: ' + str(check)              # update cycle counter text
+
 
 def start():
-    global solo, dual, sm_on, big_on
-    if sm_on == True and big_on == False:
-        sm_mot.send(129,0,0,0)
+    global solo,dual,sm_on,big_on,pause
+    if sm_on == True and big_on == False:                               # if starting small motor test,
+        sm_mot.send(129,0,0,0)                                          # start/continue small motor application
         solo = True
-        sleep(0.5)
-        app.repeat(150,one_motor,[sm_mot,sm_axis])
-    elif sm_on == False and big_on == True:
-        big_mot.send(129,0,0,0)
+        app.repeat(250,one_motor,[sm_mot,sm_axis])                      # schedule call to one-motor test function
+    elif sm_on == False and big_on == True:                             # if starting big motor test,
+        big_mot.send(129,0,0,0)                                         # start/continue big motor application
         solo = True
-        sleep(0.5)
-        app.repeat(150,one_motor,[big_mot,big_axis])
-    else:
-        sm_mot.send(129,0,0,0)
+        app.repeat(250,one_motor,[big_mot,big_axis])                    # schedule call to one-motor test function
+    else:                                                               # if starting two-motor test,
+        sm_mot.send(129,0,0,0)                                          # start/continue motor applications
         big_mot.send(129,0,0,0)
         dual = True
-        sleep(0.5)
-        app.repeat(150,two_motor)
+        app.repeat(150,two_motor)                                       # schedule call to two-motor test function
+    sm_speed.disable()                                                  # disable all entries
+    sm_start.disable()
+    sm_end.disable()
+    big_speed.disable()
+    big_start.disable()
+    big_end.disable()
     pattern.disable()
     cycles.disable()
-    submit_button.disable()
+    submit_button.disable()                                             # disable submit button
     submit_button.bg = 'light gray'
-    sm_mot_box.disable() # fix
-    big_mot_box.disable() # fix
-    reset_button.disable()
+    reset_button.disable()                                              # disable reset button
     reset_button.bg = 'light gray'
-    start_button.disable()
+    start_button.disable()                                              # disable start button
     start_button.bg = 'pale green'
-    stop_button.enable()
+    stop_button.enable()                                                # enable stop button
     stop_button.bg = 'red'
-    done_text.hide()
-    run_text.show()
-    run_text.repeat(750,color)
-    pause_text.hide()
+    run_text.show()                                                     # show test running text
+    run_text.repeat(750,color)                                          # schedule call to test running text color function
+    pause_text.hide()                                                   # hide test paused text
+    pause = False                                                       
+    done_text.hide()                                                    # hide test finished text
+
 
 def stop():
-    global solo,dual
-    sm_mot.send(128,0,0,0)
+    global solo,dual,pause                                                    
+    sm_mot.send(128,0,0,0)                                              # stop motors applications
     big_mot.send(128,0,0,0)
-    sm_mot.stop()
+    sm_mot.stop()                                                       # stop motor movement
     big_mot.stop()
-    if solo == True:
-        app.cancel(one_motor)
+    if solo == True:                                                    # if stopping one-motor test,
+        app.cancel(one_motor)                                           # cancel scheduled call to one-motor test function
         solo = False
-    elif dual == True:
-        app.cancel(two_motor)
+    elif dual == True:                                                  # if stopping two-motor test,
+        app.cancel(two_motor)                                           # cancel scheduled call to two-motor test function
         dual = False
-    mot_activity()
-    sm_mot_on.enable()
+    sm_mot_on.enable()                                                  # enable motor status checkboxes
     big_mot_on.enable()
-    reset_button.enable()
+    mot_activity()                                                      # call motor activity function
+    reset_button.enable()                                               # enable reset button
     reset_button.bg = 'sky blue'
-    start_button.enable()
+    start_button.enable()                                               # enable start button
     start_button.bg = 'green'
-    stop_button.disable()
+    stop_button.disable()                                               # disable stop button
     stop_button.bg = 'light salmon'
-    run_text.hide()
-    run_text.cancel(color)
-    pause_text.show()
+    run_text.hide()                                                     # hide test running text
+    run_text.cancel(color)                                              # cancel scheduled call to test running text color function
+    pause_text.show()                                                   # show test paused text
+    pause = True
+
 
 def reset():
-    sm_mot.send(131,0,0,0)
+    global pause
+    sm_mot.send(131,0,0,0)                                              # reset motor applications
     big_mot.send(131,0,0,0)
-    sm_mot.move_absolute(0)
+    sm_mot.move_absolute(0)                                             # move motors to zero
     big_mot.move_absolute(0)
-    pause_text.hide()
-    done_text.hide()
-    counter_text.value = 'Cycles completed: 0'
+    for x in [3,5,6,7]:
+        sm_mot.set_user_var(x,0)                                        # set user variables 3 and 5-7 to zero
+        big_mot.set_user_var(x,0)
+    counter_text.value = 'Cycles completed: 0'                          # reset cycle counter text to zero
+    if pause == True:                                                   # if test is paused,
+        start_button.enable()                                           # enable start button
+        start_button.bg = 'green'
+    pause_text.hide()                                                   # hide test paused text
+    pause = False
+    done_text.hide()                                                    # hide test finished text
+
 
 def submit():
-    global sm_on,big_on,total
+    global sm_on,big_on,total,pause
     try:
-        total = int(cycles.value)
-        if total <= 0:
-            app.error('Error','Invalid cycle entry')
+        total = int(cycles.value)                                       # attempt to convert test cycles into integer
+        if total <= 0:                                                  # if total test cycles is less than or equal to zero,
+            app.error('Error','Invalid cycle entry')                    # display popup box with error icon
             return
     except:
-        app.error('Error','Invalid cycle entry')
+        app.error('Error','Invalid cycle entry')                        # display popup box with error icon
         return
-    if big_mot_on.value == True:
+    if big_mot_on.value == True:                                        # if big motor checked,
         try:
-            bigspeed = float(big_speed.value)*55.924
-            if bigspeed <= 0:
-                app.error('Error','Invalid speed entry')
+            bigspeed = float(big_speed.value)*55.924                    # attempt to convert big motor speed into float
+            if bigspeed <= 0:                                           # if big motor speed is less than or equal to zero,
+                app.error('Error','Invalid speed entry')                # display popup box with error icon
                 return
-            big_mot.set_user_var(0,int(bigspeed))
+            big_mot.set_user_var(0,int(bigspeed))                       # set big motor user variable 0 to big motor speed
         except:
-            app.error('Error','Invalid speed entry')
+            app.error('Error','Invalid speed entry')                    # display popup box with error icon
             return
-    if sm_mot_on.value == True:
+    if sm_mot_on.value == True:                                         # if small motor checked,
         try:
-            smspeed = float(sm_speed.value)*853.33
-            if smspeed <= 0:
-                app.error('Error','Invalid speed entry')
+            smspeed = float(sm_speed.value)*853.33                      # attempt to convert small motor speed into float
+            if smspeed <= 0:                                            # if small motor speed is less than or equal to zero,
+                app.error('Error','Invalid speed entry')                # display popup box with error icon
                 return
-            sm_mot.set_user_var(0,int(smspeed))
-        except ValueError:
-            app.error('Error','Invalid speed entry')
+            sm_mot.set_user_var(0,int(smspeed))                         # set small motor user variable 0 to small motor speed
+        except:
+            app.error('Error','Invalid speed entry')                    # display popup box with error icon
             return
-        sm_mot_active.show()
-        sm_speed_text.value = 'Speed: ' + str(sm_speed.value)
-        sm_speed_text.show()
-        sm_start_text.value = 'Start angle: ' + str(sm_start.value)
-        sm_start_text.show()
-        sm_start_pos = -int(sm_start.value)*142.222
-        sm_mot.set_user_var(1,int(sm_start_pos))
-        sm_end_text.value = 'End angle: ' + str(sm_end.value)
-        sm_end_text.show()
-        sm_end_pos = -int(sm_end.value)*142.222
-        sm_mot.set_user_var(2,int(sm_end_pos))
-        sm_mot.set_user_var(4,0)
+        sm_mot_active.show()                                            # show small motor status text
+        sm_speed_text.value = 'Speed: ' + str(sm_speed.value)           # update small motor speed text
+        sm_speed_text.show()                                            # show small motor speed text
+        sm_start_text.value = 'Start angle: ' + str(sm_start.value)     # update small motor start angle text
+        sm_start_text.show()                                            # show small motor start angle text
+        sm_start_pos = -int(sm_start.value)*142.222                     # calculate small motor start position
+        sm_mot.set_user_var(1,int(sm_start_pos))                        # set small motor user variable 1 to start position
+        sm_end_text.value = 'End angle: ' + str(sm_end.value)           # update small motor end angle text
+        sm_end_text.show()                                              # show small motor end angle text
+        sm_end_pos = -int(sm_end.value)*142.222                         # calculate small motor end position
+        sm_mot.set_user_var(2,int(sm_end_pos))                          # set small motor user variable 2 to end position
+        sm_mot.set_user_var(4,0)                                        # set small motor user variable 4 to zero (no test pattern)
         sm_on = True
-    else:
-        sm_mot_active.hide()
-        sm_speed_text.hide()
+    else:                                                               # if small motor not checked,
+        sm_mot_active.hide()                                            # hide all small motor text
+        sm_speed_text.hide()                                            
         sm_start_text.hide()
         sm_end_text.hide()
-        pattern_text.hide()
+        pattern_text.hide()                                             # hide test pattern text
         sm_on = False
-    if big_mot_on.value == True:
-        big_mot_active.show()
-        big_speed_text.value = 'Speed: ' + str(big_speed.value)
-        big_speed_text.show()
-        big_start_text.value = 'Start angle: ' + str(big_start.value)
-        big_start_text.show()
-        big_start_pos = int(big_start.value)*568.889
-        big_mot.set_user_var(1,int(big_start_pos))
-        big_end_text.value = 'End angle: ' + str(big_end.value)
-        big_end_text.show()
-        big_end_pos = int(big_end.value)*568.889
-        big_mot.set_user_var(2,int(big_end_pos))
-        big_mot.set_user_var(4,0)
+    if big_mot_on.value == True:                                        # if big motor checked,
+        big_mot_active.show()                                           # show big motor status text
+        big_speed_text.value = 'Speed: ' + str(big_speed.value)         # update big motor speed text
+        big_speed_text.show()                                           # show big motor speed text
+        big_start_text.value = 'Start angle: ' + str(big_start.value)   # update big motor start angle text
+        big_start_text.show()                                           # show big motor start angle text
+        big_start_pos = int(big_start.value)*568.889                    # calculate big motor start position
+        big_mot.set_user_var(1,int(big_start_pos))                      # set big motor user variable 1 to start position
+        big_end_text.value = 'End angle: ' + str(big_end.value)         # update big motor end angle text
+        big_end_text.show()                                             # show big motor end angle text
+        big_end_pos = int(big_end.value)*568.889                        # calculate big motor end position
+        big_mot.set_user_var(2,int(big_end_pos))                        # set big motor user variable 2 to end position
+        big_mot.set_user_var(4,0)                                       # set big motor user variable 4 to zero (no test pattern)
         big_on = True
-    else:
-        big_mot_active.hide()
+    else:                                                               # if big motor not checked,
+        big_mot_active.hide()                                           # hide all big motor text
         big_speed_text.hide()
         big_start_text.hide()
         big_end_text.hide()
-        pattern_text.hide()
+        pattern_text.hide()                                             # hide test pattern text
         big_on = False
-    if sm_mot_on.value & big_mot_on.value == True:
-        pattern_text.value = 'Test pattern: ' + str(pattern.value_text) 
-        pattern_text.show()
-        if pattern.value == 3:
-            sm_mot.set_user_var(4,3)
+    if sm_mot_on.value & big_mot_on.value == True:                      # if both motors checked,
+        pattern_text.value = 'Test pattern: ' + str(pattern.value_text) # update test pattern text
+        pattern_text.show()                                             # show test pattern text
+        if pattern.value == 3:                                          # if test pattern is simultaneously
+            sm_mot.set_user_var(4,3)                                    # set user variables 4 to three (simultaneous)
             big_mot.set_user_var(4,3)
-        elif pattern.value == 2:
-            sm_mot.set_user_var(4,2)
-            big_mot.set_user_var(4,1)
-        elif pattern.value == 1:
-            sm_mot.set_user_var(4,1)
-            big_mot.set_user_var(4,2)
-    cycles_text.value = 'Total cycles: ' + str(cycles.value)
-    cycles_text.show()
-    start_button.enable()
-    start_button.bg = 'green'
+        elif pattern.value == 2:                                        # if test pattern is big motor first
+            sm_mot.set_user_var(4,2)                                    # set small motor user variable 4 to two (second)
+            big_mot.set_user_var(4,1)                                   # set big motor user variable 4 to one (first)
+        elif pattern.value == 1:                                        # if test pattern is small motor first
+            sm_mot.set_user_var(4,1)                                    # set small motor user variable 4 to one (first)
+            big_mot.set_user_var(4,2)                                   # set big motor user variable 4 to two (second)
+    cycles_text.value = 'Total cycles: ' + str(cycles.value)            # update total test cycles text
+    cycles_text.show()                                                  # show total test cycles text
+    if pause == False:                                                  # if test is not paused,
+        start_button.enable()                                           # enable start button
+        start_button.bg = 'green'
+
 
 def mot_activity():
-    if sm_mot_on.value & big_mot_on.value == True:
-        sm_speed.enable()
+    if sm_mot_on.value & big_mot_on.value == True:                      # if both motors checked,
+        sm_speed.enable()                                               # enable all entries
         sm_start.enable()
         sm_end.enable()
         big_speed.enable()
@@ -240,32 +265,32 @@ def mot_activity():
         big_end.enable()
         pattern.enable()
         cycles.enable()
-        submit_button.enable()
+        submit_button.enable()                                          # enable submit button
         submit_button.bg = 'light blue'
-    elif sm_mot_on.value == True:
-        sm_speed.enable()
+    elif sm_mot_on.value == True:                                       # if only small motor checked,
+        sm_speed.enable()                                               # enable small motor entries
         sm_start.enable()
         sm_end.enable()
-        big_speed.disable()
+        big_speed.disable()                                             # disable big motor entries
         big_start.disable()
         big_end.disable()
-        pattern.disable()
-        cycles.enable()
-        submit_button.enable()
+        pattern.disable()                                               # disable test pattern entry
+        cycles.enable()                                                 # enable test cycles entry
+        submit_button.enable()                                          # enable submit button
         submit_button.bg = 'light blue'
-    elif big_mot_on.value == True:
-        sm_speed.disable()
+    elif big_mot_on.value == True:                                      # if only big motor checked,
+        sm_speed.disable()                                              # disable small motor entries
         sm_start.disable()
         sm_end.disable()
-        big_speed.enable()
+        big_speed.enable()                                              # enable big motor entries
         big_start.enable()
         big_end.enable()
-        pattern.disable()
-        cycles.enable()
-        submit_button.enable()
+        pattern.disable()                                               # disable test pattern entry
+        cycles.enable()                                                 # enable test cycles entry
+        submit_button.enable()                                          # enable submit button
         submit_button.bg = 'light blue'
-    else:
-        sm_speed.disable()
+    else:                                                               # if no motors checked,
+        sm_speed.disable()                                              # disable all entries
         sm_start.disable()
         sm_end.disable()
         big_speed.disable()
@@ -273,8 +298,9 @@ def mot_activity():
         big_end.disable()
         pattern.disable()
         cycles.disable()
-        submit_button.disable()
+        submit_button.disable()                                         # disable submit button
         submit_button.bg = 'light gray'
+
 
 def key(number):
     if str(app.tk.focus_get()) == str(cycles.tk):                       # check cursor location
@@ -284,6 +310,7 @@ def key(number):
     elif str(app.tk.focus_get()) == str(big_speed.tk):
         big_speed.append(number)                                        # add number/decimal to big motor speed textbox
 
+
 def clear():
     if str(app.tk.focus_get()) == str(cycles.tk):                       # check cursor location
         cycles.clear()                                                  # clear test cycles textbox
@@ -292,16 +319,18 @@ def clear():
     elif str(app.tk.focus_get()) == str(big_speed.tk):
         big_speed.clear()                                               # clear big motor speed textbox
 
+
 def close():
-    sm_mot.send(128,0,0,0)                                              # send commands to stop motor applications
+    sm_mot.send(128,0,0,0)                                              # stop motor applications
     big_mot.send(128,0,0,0)
-    sm_mot.stop()                                                       # send commands to stop motor movement
+    sm_mot.stop()                                                       # stop motor movement
     big_mot.stop()
-    if app.yesno('Quit','Are you sure?'):                               # double-check app quit was intentional
-        app.destroy()
+    if app.yesno('Quit','Are you sure?'):                               # check if app quit was intentional
+        app.destroy()                                                   
+
 
 def color():                                            
-    if run_text.text_color == 'pale green':                             # alternate color of test running status text
+    if run_text.text_color == 'pale green':                             # alternate color of test running text
         run_text.text_color = 'dark green'
     else:
         run_text.text_color = 'pale green'
@@ -350,12 +379,13 @@ big_mot_active = Text(display_box, text='Big motor active', visible=False,      
 big_speed_text = Text(display_box, text='Speed:', visible=False, size=-12)          # big motor speed text (initially hidden)
 big_start_text = Text(display_box, text='Start angle:', visible=False, size=-12)    # big motor start angle text (initially hidden)
 big_end_text = Text(display_box, text='End angle:', visible=False, size=-12)        # big motor end angle text (initially hidden)
-pattern_text = Text(display_box, text='Test pattern:', visible=False, height='2',   # two-motor test pattern text (initially hidden)
+pattern_text = Text(display_box, text='Test pattern:', visible=False, height='2',   # test pattern text (initially hidden)
                     size=-12)
-run_text = Text(display_box, text='TEST RUNNING', color='dark green', height='2',   # test running status text (initially hidden)
+run_text = Text(display_box, text='TEST RUNNING', color='dark green', height='2',   # test running text (initially hidden)
                 visible=False)
-pause_text = Text(display_box, text='TEST PAUSED', height='2', visible=False)       # test paused status text (initially hidden)
-done_text = Text(display_box, text='TEST FINISHED', height='2', visible=False)      # test finished status text (initially hidden)
+pause_text = Text(display_box, text='TEST PAUSED', height='2', visible=False)       # test paused text (initially hidden)
+pause = False                                                                       # test paused boolean
+done_text = Text(display_box, text='TEST FINISHED', height='2', visible=False)      # test finished text (initially hidden)
 keypad_box = Box(display_box, layout='grid', align='bottom')                        # box containing keypad within display box
 button1 = PushButton(keypad_box, text='1', grid=[0,0], command=key, args=[1])       # number 1 button calls key function
 button1.bg = 'sky blue'
@@ -414,9 +444,9 @@ sm_mot_speed = Text(sm_mot_box, text='Speed [rpm]:', height='2', size=-12)      
 sm_speed = TextBox(sm_mot_box, text='0', enabled=False)                             # small motor speed textbox input (initially disabled)
 sm_speed.tk.config(justify='center')                                                # access tkinter object to center text
 sm_start_angle = Text(sm_mot_box, text='Start angle:', height='2', size=-12)        # small motor start angle input text
-sm_start = Slider(sm_mot_box, start='0', end='360', width='fill', enabled=False) # small motor start angle slider input (initially disabled)
+sm_start = Slider(sm_mot_box, start='0', end='360', width='fill', enabled=False)    # small motor start angle slider input (initially disabled)
 sm_end_angle = Text(sm_mot_box, text='End angle:', height='2', size=-12)            # small motor end angle input text
-sm_end = Slider(sm_mot_box, start='0', end='360', width='fill', enabled=False)   # small motor end angle slider input (initially disabled)
+sm_end = Slider(sm_mot_box, start='0', end='360', width='fill', enabled=False)      # small motor end angle slider input (initially disabled)
 
 
 big_mot_box = Box(app, height='fill', width='fill', align='right')                  # box containing big motor parameter inputs
@@ -427,9 +457,10 @@ big_mot_speed = Text(big_mot_box, text='Speed [rpm]:', height='2', size=-12)    
 big_speed = TextBox(big_mot_box, text='0', enabled=False)                           # big motor speed textbox input (initially disabled)
 big_speed.tk.config(justify='center')                                               # access tkinter object to center text
 big_start_angle = Text(big_mot_box, text='Start angle:', height='2', size=-12)      # big motor start angle input text
-big_start = Slider(big_mot_box, start='-110', end='110', width='fill', enabled=False) # big motor start angle slider input (initally disabled)                         
+big_start = Slider(big_mot_box, start='-110', end='110', width='fill',              # big motor start angle slider input (initally disabled)
+                   enabled=False)                         
 big_end_angle = Text(big_mot_box, text='End angle:', height='2', size=-12)          # big motor end angle input text
-big_end = Slider(big_mot_box, start='-110', end='110', width='fill', enabled=False)   # big motor end angle slider input (initially disabled)
+big_end = Slider(big_mot_box, start='-110', end='110', width='fill', enabled=False) # big motor end angle slider input (initially disabled)
                        
 
 app.display()                                                                       # method displaying app on the screen
