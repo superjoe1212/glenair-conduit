@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Conduit Test
+Comment=Application to run a fatigue test
+Icon=/usr/share/pixmaps/pstree32.xpm
+Exec=python3 /home/pi/Desktop/Glenair/conduitgui.py
+Type=Application
+Terminal=false
