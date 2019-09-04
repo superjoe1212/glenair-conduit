@@ -19,7 +19,7 @@ def create (port_name, address, speed, accel, current, stand):
     axis.set(6, current)                                        # set maximum current
     axis.set(7, stand)                                          # set maximum standby current
 
-    for x in range(0,8):                                            
+    for x in range(8):                                            
         motor.set_user_var(x,0)                                 # set user variables 0-7 to zero
 
     return motor, axis
