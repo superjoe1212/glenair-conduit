@@ -42,88 +42,88 @@ COMP 2
 JC EQ, DualSecond
 COMP 3
 JC EQ, DualTest
-STOP
+STOP				//end program
 
 // run one motor test
 
 SoloTest:
 	MVP COORD, 0, end 			// move motor zero to end coords
-	WAIT POS, 0, 0				//wait until getting to target position, <timeout value>
+	WAIT POS, 0, 0				//wait until motor 0 gets to target position, <timeout value>
 	MVP COORD, 0, begin			//move motor zero to begin coordinates
-	GGP cycles, 2				//get global parameter titled cycles
-	CALC ADD, 1				
-	AGP cycles, 2
-	WAIT POS, 0, 0
-	WAIT TICKS, 0, 30
-	GGP finish, 2
-	COMP 1
-	JC EQ, Exit
-	JA SoloTest
+	GGP cycles, 2				//get global parameter titled cycles from bank 2
+	CALC ADD, 1				// add 1 to cycle count
+	AGP cycles, 2				//write new cycle count to bank 2 variable titled ' cycles'
+	WAIT POS, 0, 0				// wait until motor 0 reaches target position
+	WAIT TICKS, 0, 30			// have motor 0 wait 30 ticks (300 milliseconds)
+	GGP finish, 2				// get global variable titled finish from bankk 2
+	COMP 1					// compare finish variable with 1
+	JC EQ, Exit				// if equal to 1, exit
+	JA SoloTest				// otherwise perform soloTest again
 
 // run first in two motor test
 
 DualFirst:
-	MVP COORD, 0, end
-	WAIT POS, 0, 0
-	SGP done, 2, 1
-	CSUB Poll
-	MVP COORD, 0, begin
-	WAIT POS, 0, 0
-	SGP done, 2, 1
-	CSUB Poll
-	WAIT TICKS, 0, 30
-	GGP finish, 2
-	COMP 1
-	JC EQ, Exit
-	JA DualFirst
+	MVP COORD, 0, end			//move motor zero to coordinates stored as 'end'
+	WAIT POS, 0, 0	
+	SGP done, 2, 1				//set global parameter titled done, in bank 2, to 1
+	CSUB Poll				//call subroutine titled 'poll'
+	MVP COORD, 0, begin			// move to begin coords
+	WAIT POS, 0, 0				//wait until reaching target coords
+	SGP done, 2, 1				//set done variable to 1 
+	CSUB Poll				//run 'poll'
+	WAIT TICKS, 0, 30			//motor 0 wait 300 milliseconds
+	GGP finish, 2				//get parameter titled 'finish' from bank 2
+	COMP 1					//compare with 1
+	JC EQ, Exit				//if equal, exit
+	JA DualFirst				//otherwise run again
 
 // running second in two motor test
 
 DualSecond:
-	CSUB Poll
-	MVP COORD, 0, end
-	WAIT POS, 0, 0
-	SGP done, 2, 1
-	CSUB Poll
-	MVP COORD, 0, begin
-	WAIT POS, 0, 0
-	SGP done, 2, 1
-	GGP cycles, 2
-	CALC ADD, 1
-	AGP cycles, 2
-	WAIT TICKS, 0, 30
-	GGP finish, 2
-	COMP 1
-	JC EQ, Exit
-	JA DualSecond
+	CSUB Poll				//call subroutine 'poll' to wait for 'ready' signal
+	MVP COORD, 0, end			//move to end coordinates
+	WAIT POS, 0, 0				//wait until reaching targer
+	SGP done, 2, 1				//set global parameter 'done' on bank 2, to 1
+	CSUB Poll				//call subroutine 'poll' to wait for ready signal - after running poll both 'done' and 'ready' are returned to 0 
+	MVP COORD, 0, begin			//move back to begin coords
+	WAIT POS, 0, 0				//wait for position
+	SGP done, 2, 1				//mark 'done' as 1
+	GGP cycles, 2				//get cycle variable
+	CALC ADD, 1				//add one
+	AGP cycles, 2				//write new cycle count to cycles variable in bank 2
+	WAIT TICKS, 0, 30			//wait 300 ms	
+	GGP finish, 2				//get finish variable
+	COMP 1					//compare with 1
+	JC EQ, Exit				//if equal, exit
+	JA DualSecond				// othewise run dualSecond again
 
 // running together in two motor test
 
 DualTest:
-	MVP COORD, 0, end
-	WAIT POS, 0, 0
-	SGP done, 2, 1
-	CSUB Poll
-	MVP COORD, 0, begin
-	WAIT POS, 0, 0
-	SGP done, 2, 1
-	CSUB Poll
-	GGP cycles, 2
-	CALC ADD, 1
-	AGP cycles, 2
-	WAIT TICKS, 0, 30
-	GGP finish, 2
-	COMP 1
-	JC EQ, Exit
-	JA DualTest
+	MVP COORD, 0, end			//move motor 0 to end position
+	WAIT POS, 0, 0				
+	SGP done, 2, 1				//set 'done' variable to 1 after reaching target position
+	CSUB Poll				//call subroutine 'poll' to check for 'ready' signal
+	MVP COORD, 0, begin			//move back to begin coords
+	WAIT POS, 0, 0				
+	SGP done, 2, 1				//mark done var to 1
+	CSUB Poll				//call subroutine 'poll' to check for 'ready' signal
+	GGP cycles, 2				//get cycle count
+	CALC ADD, 1				//add 1
+	AGP cycles, 2				//write new cycle count
+	WAIT TICKS, 0, 30			//wait 30
+	GGP finish, 2				
+	COMP 1					
+	JC EQ, Exit				//check for 'finish' flag and exit or start over
+	JA DualTest				
 
 Poll:
-	GGP ready, 2
-	COMP 1
-	JC NE, Poll
-	SGP done, 2, 0
-	SGP ready, 2, 0
-	RSUB
+	GGP ready, 2			// get global variable titled 'ready' from bank 2
+	COMP 1				// compare with 1
+	JC NE, Poll			// if not equal to 1, check again
+	SGP done, 2, 0			// set parameter titled 'done' in bank 2, to 0
+	SGP ready, 2, 0			// set parameter titled ready in bank 2 to 0
+	RSUB				// return from subroutine
 
 Exit:
 	STOP
