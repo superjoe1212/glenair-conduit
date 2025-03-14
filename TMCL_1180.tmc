@@ -17,26 +17,26 @@ AAP 4, 0	   		//reset maximum positioning speed [pps]
 
 // get and copy the start and end coordinates
 
-GGP begin, 2  	//get user variable 1
-ACO begin, 0		//set starting coordinate
+GGP begin, 2  		//get user variable 1 from variable bank 2
+ACO begin, 0		//set actual position of motor 0 to a slot in the memory titled 'begin'
 
 GGP end, 2 		//get user variable 2
-ACO end, 0		//set ending coordinate
+ACO end, 0		//set ending coordinate - set actual position of motor 0 to a slot in the memory titled 'end'
 
 // initialize motor
 
-MVP COORD, 0, begin
-WAIT POS, 0, 0
+MVP COORD, 0, begin		//move motor 0 to position coordinate titled 'begin'
+WAIT POS, 0, 0			//wait until motor 0 gets to target above , <timeout value in ticks, 1 tick is 10 milliseconds>
 
-SGP cycles, 2, 0
+SGP cycles, 2, 0		//set global parameters to zero
 SGP finish, 2, 0
 SGP ready, 2, 0
 SGP done, 2, 0
 
-GGP pattern, 2
-COMP 0
-JC EQ, SoloTest
-COMP 1
+GGP pattern, 2			//get global parameter from bank 2
+COMP 0				//compare with zero
+JC EQ, SoloTest			//if equal to zero, jump to solo test
+COMP 1			
 JC EQ, DualFirst
 COMP 2
 JC EQ, DualSecond
