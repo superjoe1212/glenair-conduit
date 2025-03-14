@@ -47,11 +47,11 @@ STOP
 // run one motor test
 
 SoloTest:
-	MVP COORD, 0, end
-	WAIT POS, 0, 0
-	MVP COORD, 0, begin
-	GGP cycles, 2
-	CALC ADD, 1
+	MVP COORD, 0, end 			// move motor zero to end coords
+	WAIT POS, 0, 0				//wait until getting to target position, <timeout value>
+	MVP COORD, 0, begin			//move motor zero to begin coordinates
+	GGP cycles, 2				//get global parameter titled cycles
+	CALC ADD, 1				
 	AGP cycles, 2
 	WAIT POS, 0, 0
 	WAIT TICKS, 0, 30
