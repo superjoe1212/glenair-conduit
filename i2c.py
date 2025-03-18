@@ -1,0 +1,1 @@
+# https://www.abelectronics.co.uk/kb/article/1092/i2c-part-3-i2c-tools-in-linux
