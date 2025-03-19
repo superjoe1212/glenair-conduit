@@ -4,6 +4,7 @@
 speed = 0
 begin = 1
 end = 2
+//mid = 3
 cycles = 3
 pattern = 4
 finish = 5
@@ -101,6 +102,8 @@ DualSecond:
 
 DualTest:
 	MVP COORD, 0, end			//move motor 0 to end position
+	//WAIT TICKS, 0, 30			//wait 300ms
+	//CCO   
 	WAIT POS, 0, 0				
 	SGP done, 2, 1				//set 'done' variable to 1 after reaching target position
 	CSUB Poll				//call subroutine 'poll' to check for 'ready' signal
