@@ -12,13 +12,13 @@ done = 7
 
 // get the speed and update axis parameter 4
 
-GGP speed, 2  	//get user variable 0
-AAP 4, 0	   		//reset maximum positioning speed [pps]
+GGP speed, 2  	//get user variable 0 from variable bank 2
+AAP 4, 0	   		//reset maximum positioning speed [pps] (parameter 4) to the value in the accumulator (user variable 0, titled 'speed')
 
 // get and copy the start and end coordinates
 
 GGP begin, 2  		//get user variable 1 from variable bank 2
-ACO begin, 0		//set actual position of motor 0 to a slot in the memory titled 'begin'
+ACO begin, 0		//save user variable to coordinate bank, coordinate labeled 'begin'
 
 GGP end, 2 		//get user variable 2
 ACO end, 0		//set ending coordinate - set actual position of motor 0 to a slot in the memory titled 'end'
@@ -66,7 +66,7 @@ DualFirst:
 	MVP COORD, 0, end			//move motor zero to coordinates stored as 'end'
 	WAIT POS, 0, 0	
 	SGP done, 2, 1				//set global parameter titled done, in bank 2, to 1
-	CSUB Poll				//call subroutine titled 'poll'
+	CSUB Poll				//call subroutine titled 'poll' to wait for ready signal, before resetting ready and done signals and continuing
 	MVP COORD, 0, begin			// move to begin coords
 	WAIT POS, 0, 0				//wait until reaching target coords
 	SGP done, 2, 1				//set done variable to 1 
@@ -115,9 +115,10 @@ DualTest:
 	GGP finish, 2				
 	COMP 1					
 	JC EQ, Exit				//check for 'finish' flag and exit or start over
-	JA DualTest				
+	JA DualTest	
 
-Poll:
+
+Poll:					//wait for ready signal, and then turn off both done signal and ready signal
 	GGP ready, 2			// get global variable titled 'ready' from bank 2
 	COMP 1				// compare with 1
 	JC NE, Poll			// if not equal to 1, check again
