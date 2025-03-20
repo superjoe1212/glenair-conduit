@@ -316,7 +316,6 @@ def mot_activity():
         sm_start.enable()
         sm_end.enable()
         big_speed.enable()
-        big_speed.text(10) 
         big_dependent.enable()
         big_start.enable()
         big_end.enable()
