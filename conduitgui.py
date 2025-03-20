@@ -316,6 +316,7 @@ def mot_activity():
         sm_start.enable()
         sm_end.enable()
         big_speed.enable()
+        big_speed.text(10) 
         big_dependent.enable()
         big_start.enable()
         big_end.enable()
@@ -513,7 +514,7 @@ test_pattern = Text(submit_box, text='Test pattern:', height='2', size=-12)     
 pattern = ButtonGroup(submit_box,                                                   # test pattern button group input (initially disabled)
                       options=[['Simultaneous ','3'],['Small motor first ','1'],['Big motor first ','2']], horizontal=True, enabled=False)
 total_cycles = Text(submit_box, text='Number of cycles:', height='2', size=-12)     # test cycles input text
-cycles = TextBox(submit_box, text='0', enabled=False)                               # test cycles textbox input (initially disabled)
+cycles = TextBox(submit_box, text='1', enabled=False)                               # test cycles textbox input (initially disabled)
 cycles.tk.config(justify='center')                                                  # access tkinter object to center text
 total = 0                                                                           # total test cycles variable
 blank_3 = Text(submit_box, size=-12)                                                # spacer
@@ -557,7 +558,7 @@ big_end_angle = Text(big_mot_box, text='End angle:', height='2', size=-12)      
 big_end = Slider(big_mot_box, start='-110', end='110', width='fill', enabled=False) # big motor end angle slider input (initially disabled)
 
 big_current_lim_txt = Text(big_mot_box, text='Current Limit (mA):', height='2', size=-12)
-big_current_mA = Slider(big_mot_box, start='0', end='1200', width='fill', 
+big_current_mA = Slider(big_mot_box, start='10', end='1200', width='fill', 
                        enabled=True)                                                 # 255 is max rated current of driver (5.5A RMS for TMCM1180 (big motor), 6A for TMCM1260)
 
 
