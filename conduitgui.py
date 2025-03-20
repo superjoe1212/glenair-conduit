@@ -172,6 +172,15 @@ def reset():
         pause = False
     done_text.hide()                                                    # hide test finished text
 
+varSpeed = 0
+varBegin = 1
+varEnd = 2
+varCycles = 3
+varPattern = 4
+varFinish = 5
+varReady = 6
+varDone = 7
+
 
 def submit():
     global sm_on,big_on,total,pause
@@ -183,6 +192,10 @@ def submit():
     except:
         app.error('Error','Invalid cycle entry')                        # display popup box with error icon
         return
+    
+    big_axis.set(6, big_current)
+    sm_axis.set(6, sm_current)
+
     if sm_mot_on.value == True and sm_dependent.value == False:         # if small motor checked and not dependent,
         try:
             smspeed = float(sm_speed.value)*853.33                      # attempt to convert small motor speed into float
