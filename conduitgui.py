@@ -411,7 +411,7 @@ def color():
 
     
 app = App(title='Glenair Conduit Test',                                             # base app object of GUI
-          bg='light blue', height='800', width='800')
+          bg='light blue', height='900', width='800')
 app.when_closed = close                                                             # set up function to call when quitting app
 solo = False                                                                        # running a one-motor test boolean
 dual = False                                                                        # running a two-motor test boolean
