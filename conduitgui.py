@@ -5,7 +5,7 @@
 # guizero documentation https://lawsie.github.io/guizero/
 from guizero import App, Window, Box, Text, TextBox, Slider, PushButton, CheckBox, ButtonGroup
 import motorsetup
-from gpiozero import Button                                           #for use in power down switch
+from gpiozero import Button
 
 
 sm_mot,sm_axis,big_mot,big_axis = motorsetup.start()                    # create motor and axis objects
@@ -22,43 +22,28 @@ def all_stop():
     big_mot.stop()
 
 
-def close():
-    reset()                                                             # call reset function
-    if app.yesno('Quit','Are you sure?'):                               # check if app quit was intentional
-        app.destroy()  
-
-
 switch = Button(13)                                                     # create emergency stop switch object
 switch.when_pressed = e_stop                                            # set up function to call when switched
 switch.when_released = all_stop                                         # set up function to call when released
 
-#user variable codes in motor driver banks:
-speed = 0
-begin = 1
-end = 2
-cycles = 3
-pattern = 4
-finish = 5
-ready = 6
-done = 7
 
-def two_motor():                                                        #checks if small motor is done, in which case turns on big motor ready flag. and vice versa
-    global sm_finished,big_finished,total
-    sm_done = sm_mot.get_user_var(done)                                   # get small motor user variable 7 (done flag)
-    if sm_done == 1:                                                   # if small motor done,
-        big_mot.set_user_var(ready,1)                                       # set big motor user variable 6 to one (ready flag)
-    big_done = big_mot.get_user_var(done)                                 # get big motor user variable 7 (done flag)
-    if big_done == 1:                                                  # if big motor done,
-        sm_mot.set_user_var(ready,1)                                        # set small motor user variable 6 to one (ready flag)
-    sm_check = sm_mot.get_user_var(cycles)                                   # get small motor user variable 3 (cycles check)
+def two_motor():
+    global sm_done,big_done,total
+    sm_ready = sm_mot.get_user_var(7)                                   # get small motor user variable 7 (ready flag)
+    if sm_ready == 1:                                                   # if small motor ready,
+        big_mot.set_user_var(6,1)                                       # set big motor user variable 6 to one (done flag)
+    big_ready = big_mot.get_user_var(7)                                 # get big motor user variable 7 (ready flag)
+    if big_ready == 1:                                                  # if big motor ready,
+        sm_mot.set_user_var(6,1)                                        # set small motor user variable 6 to one (done flag)
+    sm_check = sm_mot.get_user_var(3)                                   # get small motor user variable 3 (cycles check)
     if sm_check >= total:                                               # if cycles check is greater than or equal to total test cycles,
-        sm_mot.set_user_var(finish,1)                                        # set small motor user variable 5 to one (finished flag)
-        sm_finished = True
-    big_check = big_mot.get_user_var(cycles)                                 # get big motor user variable 3 (cycles check)
+        sm_mot.set_user_var(5,1)                                        # set small motor user variable 5 to one (finished flag)
+        sm_done = True
+    big_check = big_mot.get_user_var(3)                                 # get big motor user variable 3 (cycles check)
     if big_check >= total:                                              # if cycles check is greater than or equal to total test cycles,
-        big_mot.set_user_var(finish,1)                                       # set big motor user variable 5 to one (finished flag)
-        big_finished = True
-    if sm_finished and big_finished == True:                                    # if both motors finished,                  
+        big_mot.set_user_var(5,1)                                       # set big motor user variable 5 to one (finished flag)
+        big_done = True
+    if sm_done and big_done == True:                                    # if both motors finished,                  
         sm_mot_on.enable()                                              # enable motor status checkboxes
         big_mot_on.enable()
         mot_activity()                                                  # call motor activity function
@@ -72,17 +57,17 @@ def two_motor():                                                        #checks 
         run_text.cancel(color)                                          # cancel scheduled call to test running text color function
         done_text.show()                                                # enable test finished text
         app.cancel(two_motor)                                           # cancel scheduled call to two-motor function
-        sm_finished = False
-        big_finished = False
+        sm_done = False
+        big_done = False
         dual = False
     counter_text.value = 'Cycles completed: ' + str(big_check)          # update cycle counter text
 
 
-def one_motor(motor,axis):                                              #checks cycle count and compares to 'total' variable
+def one_motor(motor,axis):
     global total
-    check = motor.get_user_var(cycles)                                       # get user variable 3 (cycles check)
+    check = motor.get_user_var(3)                                       # get user variable 3 (cycles check)
     if check >= total:                                                  # if cycles check is greater than or equal to total test cycles,
-        motor.set_user_var(finish,1)                                         # set user variable 5 to one (finished flag)
+        motor.set_user_var(5,1)                                         # set user variable 5 to one (finished flag)
         sm_mot_on.enable()                                              # enable motor status checkboxes
         big_mot_on.enable()                                             
         mot_activity()                                                  # call motor activity function
@@ -100,15 +85,14 @@ def one_motor(motor,axis):                                              #checks 
     counter_text.value = 'Cycles completed: ' + str(check)              # update cycle counter text
 
 
-def start():                                                            # depending on which motors are selected, start corresponding TMCL program, and send a 
-                                                                            #scheduled call to the 'one_motor' or 'dual motor' function to check cycles, done flags, ready flags
+def start():
     global solo,dual,sm_on,big_on,pause
     if pause == False:                                                  # if test is not paused,
         reset()                                                         # call reset function
         if sm_on == True and big_on == False:                           # if starting small motor test,
             sm_mot.send(129,0,0,0)                                      # start small motor application
             solo = True
-            app.repeat(250,one_motor,[sm_mot,sm_axis])                  # schedule call to one-motor test function - every 250ms
+            app.repeat(250,one_motor,[sm_mot,sm_axis])                  # schedule call to one-motor test function
         elif sm_on == False and big_on == True:                         # if starting big motor test,
             big_mot.send(129,0,0,0)                                     # start big motor application
             solo = True
@@ -117,7 +101,7 @@ def start():                                                            # depend
             sm_mot.send(129,0,0,0)                                      # start motor applications
             big_mot.send(129,0,0,0)
             dual = True
-            app.repeat(150,two_motor)                                   # schedule call to two-motor test function - every 150ms
+            app.repeat(150,two_motor)                                   # schedule call to two-motor test function
     elif pause == True:                                                 # if test is paused,
         if sm_on == True:                                               # if continuing small motor test,
             sm_mot.send(129,0,0,0)                                      # start small motor application
@@ -146,7 +130,7 @@ def start():                                                            # depend
     done_text.hide()                                                    # hide test finished text
 
 
-def stop():                                                             #stops motors, turns on pause flag
+def stop():
     global pause                                              
     sm_mot.send(128,0,0,0)                                              # stop motors applications
     big_mot.send(128,0,0,0)
@@ -165,9 +149,9 @@ def stop():                                                             #stops m
     pause = True
 
 
-def reset():                                                            # stops and resets motor programs and sets cycles, finish, ready, done flags to zero
+def reset():
     global solo,dual,pause
-    sm_mot.send(131,0,0,0)                                              # reset motor applications (131 is the tmcl command to stop programs and reset accumulator, etc.)
+    sm_mot.send(131,0,0,0)                                              # reset motor applications
     big_mot.send(131,0,0,0)
     sm_mot.move_absolute(0)                                             # move motors to zero
     big_mot.move_absolute(0)
@@ -178,7 +162,7 @@ def reset():                                                            # stops 
         app.cancel(two_motor)                                           # cancel scheduled call to two-motor test function
         dual = False
     for x in [3,5,6,7]:
-        sm_mot.set_user_var(x,0)                                        # set user variables 3 and 5-7 to zero (cycles, finish, ready, done)
+        sm_mot.set_user_var(x,0)                                        # set user variables 3 and 5-7 to zero
         big_mot.set_user_var(x,0)
     counter_text.value = 'Cycles completed: 0'                          # reset cycle counter text to zero
     if pause == True:                                                   # if test is paused,
@@ -187,9 +171,9 @@ def reset():                                                            # stops 
         pause_text.hide()                                               # hide test paused text
         pause = False
     done_text.hide()                                                    # hide test finished text
-    
 
-def submit():                                                           #sends user inputs to motor drivers
+
+def submit():
     global sm_on,big_on,total,pause
     try:
         total = int(cycles.value)                                       # attempt to convert test cycles into integer
@@ -199,18 +183,13 @@ def submit():                                                           #sends u
     except:
         app.error('Error','Invalid cycle entry')                        # display popup box with error icon
         return
-    
-    big_axis.set(6,big_current)
-    sm_axis.set(6,sm_current)
-
-
     if sm_mot_on.value == True and sm_dependent.value == False:         # if small motor checked and not dependent,
         try:
             smspeed = float(sm_speed.value)*853.33                      # attempt to convert small motor speed into float
             if smspeed <= 0:                                            # if small motor speed is less than or equal to zero,
                 app.error('Error','Invalid speed entry')                # display popup box with error icon
                 return
-            sm_mot.set_user_var(speed,int(smspeed))                         # set small motor user variable 0 to small motor speed
+            sm_mot.set_user_var(0,int(smspeed))                         # set small motor user variable 0 to small motor speed
         except:
             app.error('Error','Invalid speed entry')                    # display popup box with error icon
             return
@@ -220,14 +199,14 @@ def submit():                                                           #sends u
             if bigspeed <= 0:                                           # if big motor speed is less than or equal to zero,
                 app.error('Error','Invalid speed entry')                # display popup box with error icon
                 return
-            big_mot.set_user_var(speed,int(bigspeed))                       # set big motor user variable 0 to big motor speed
+            big_mot.set_user_var(0,int(bigspeed))                       # set big motor user variable 0 to big motor speed
         except:
             app.error('Error','Invalid speed entry')                    # display popup box with error icon
             return
     if sm_dependent.value == True:                                      # if small motor speed dependent,
         try:                                                            # attempt to calculate small motor speed
             smspeed = float(big_speed.value)*abs(sm_start.value-sm_end.value)/abs(big_start.value-big_end.value)
-            sm_mot.set_user_var(speed,int(smspeed*853.33))                  # set small motor user variable 0 to small motor speed
+            sm_mot.set_user_var(0,int(smspeed*853.33))                  # set small motor user variable 0 to small motor speed
             sm_speed.value = str(round(smspeed,3))                      # update small motor speed input text
         except:
             app.error('Error','Invalid angle entry')                    # display popup box with error icon
@@ -235,7 +214,7 @@ def submit():                                                           #sends u
     elif big_dependent.value == True:                                   # if big motor speed dependent,
         try:                                                            # attempt to calculate big motor speed
             bigspeed = float(sm_speed.value)*abs(big_start.value-big_end.value)/abs(sm_start.value-sm_end.value)
-            big_mot.set_user_var(speed,int(bigspeed*111.848))               # set big motor user variable 0 to big motor speed
+            big_mot.set_user_var(0,int(bigspeed*111.848))               # set big motor user variable 0 to big motor speed
             big_speed.value = str(round(bigspeed,3))                    # update big motor speed input text
         except:
             app.error('Error','Invalid angle entry')                    # display popup box with error icon
@@ -247,12 +226,12 @@ def submit():                                                           #sends u
         sm_start_text.value = 'Start angle: ' + str(sm_start.value)     # update small motor start angle text
         sm_start_text.show()                                            # show small motor start angle text
         sm_start_pos = -int(sm_start.value)*142.222                     # calculate small motor start position
-        sm_mot.set_user_var(begin,int(sm_start_pos))                        # set small motor user variable 1 to start position
+        sm_mot.set_user_var(1,int(sm_start_pos))                        # set small motor user variable 1 to start position
         sm_end_text.value = 'End angle: ' + str(sm_end.value)           # update small motor end angle text
         sm_end_text.show()                                              # show small motor end angle text
         sm_end_pos = -int(sm_end.value)*142.222                         # calculate small motor end position
-        sm_mot.set_user_var(end,int(sm_end_pos))                          # set small motor user variable 2 to end position
-        sm_mot.set_user_var(pattern,0)                                        # set small motor user variable 4 to zero (no test pattern)
+        sm_mot.set_user_var(2,int(sm_end_pos))                          # set small motor user variable 2 to end position
+        sm_mot.set_user_var(4,0)                                        # set small motor user variable 4 to zero (no test pattern)
         sm_on = True
     else:                                                               # if small motor not checked,
         sm_mot_active.hide()                                            # hide all small motor text
@@ -268,12 +247,12 @@ def submit():                                                           #sends u
         big_start_text.value = 'Start angle: ' + str(big_start.value)   # update big motor start angle text
         big_start_text.show()                                           # show big motor start angle text
         big_start_pos = int(big_start.value)*568.889                    # calculate big motor start position
-        big_mot.set_user_var(begin,int(big_start_pos))                      # set big motor user variable 1 to start position
+        big_mot.set_user_var(1,int(big_start_pos))                      # set big motor user variable 1 to start position
         big_end_text.value = 'End angle: ' + str(big_end.value)         # update big motor end angle text
         big_end_text.show()                                             # show big motor end angle text
         big_end_pos = int(big_end.value)*568.889                        # calculate big motor end position
-        big_mot.set_user_var(end,int(big_end_pos))                        # set big motor user variable 2 to end position
-        big_mot.set_user_var(pattern,0)                                       # set big motor user variable 4 to zero (no test pattern)
+        big_mot.set_user_var(2,int(big_end_pos))                        # set big motor user variable 2 to end position
+        big_mot.set_user_var(4,0)                                       # set big motor user variable 4 to zero (no test pattern)
         big_on = True
     else:                                                               # if big motor not checked,
         big_mot_active.hide()                                           # hide all big motor text
@@ -286,14 +265,14 @@ def submit():                                                           #sends u
         pattern_text.value = 'Test pattern: ' + str(pattern.value_text) # update test pattern text
         pattern_text.show()                                             # show test pattern text
         if pattern.value == 3:                                          # if test pattern is simultaneously
-            sm_mot.set_user_var(pattern,3)                                    # set user variables 4 to three (simultaneous)
-            big_mot.set_user_var(pattern,3)
+            sm_mot.set_user_var(4,3)                                    # set user variables 4 to three (simultaneous)
+            big_mot.set_user_var(4,3)
         elif pattern.value == 2:                                        # if test pattern is big motor first
-            sm_mot.set_user_var(pattern,2)                                    # set small motor user variable 4 to two (second)
-            big_mot.set_user_var(pattern,1)                                   # set big motor user variable 4 to one (first)
+            sm_mot.set_user_var(4,2)                                    # set small motor user variable 4 to two (second)
+            big_mot.set_user_var(4,1)                                   # set big motor user variable 4 to one (first)
         elif pattern.value == 1:                                        # if test pattern is small motor first
-            sm_mot.set_user_var(pattern,1)                                    # set small motor user variable 4 to one (first)
-            big_mot.set_user_var(pattern,2)                                   # set big motor user variable 4 to two (second)
+            sm_mot.set_user_var(4,1)                                    # set small motor user variable 4 to one (first)
+            big_mot.set_user_var(4,2)                                   # set big motor user variable 4 to two (second)
     cycles_text.value = 'Total cycles: ' + str(cycles.value)            # update total test cycles text
     cycles_text.show()                                                  # show total test cycles text
     if pause == False:                                                  # if test is not paused,
@@ -304,7 +283,7 @@ def submit():                                                           #sends u
         reset()                                                         # call reset function
 
 
-def mot_activity():                                                     # determines which input boxes/sliders are enabled or disabled, based on the active motor checkboxes
+def mot_activity():
     if sm_mot_on.value & big_mot_on.value == True:                      # if both motors checked,
         sm_speed.enable()                                               # enable all inputs
         sm_dependent.enable()
@@ -402,7 +381,10 @@ def clear():
         big_speed.clear()                                               # clear big motor speed textbox
 
 
-                                                 
+def close():
+    reset()                                                             # call reset function
+    if app.yesno('Quit','Are you sure?'):                               # check if app quit was intentional
+        app.destroy()                                                   
 
 
 def color():                                            
@@ -413,12 +395,12 @@ def color():
 
     
 app = App(title='Glenair Conduit Test',                                             # base app object of GUI
-          bg='light blue', height='1000', width='800')
+          bg='light blue', height='800', width='800')
 app.when_closed = close                                                             # set up function to call when quitting app
 solo = False                                                                        # running a one-motor test boolean
 dual = False                                                                        # running a two-motor test boolean
-sm_finished = False                                                                     # small motor finished boolean
-big_finished = False                                                                    # big motor finished boolean
+sm_done = False                                                                     # small motor finished boolean
+big_done = False                                                                    # big motor finished boolean
 
 
 instruction_box = Box(app, width='fill', align='top')                               # box containing simple test instructions

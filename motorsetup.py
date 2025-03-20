@@ -26,15 +26,15 @@ def create (port_name, address, speed, accel, current, stand):
 
 def start ():
     
-    sm_mot,sm_axis = create('/dev/ttyACM1',1,10240,5120,135,20) # use create function for small motor and axis
+    sm_mot,sm_axis = create('/dev/ttyACM1',1,10240,5120,152,20) # use create function for small motor and axis
     big_mot,big_axis = create('/dev/ttyACM0',1,1343,440,64,8)   # use create function for big motor and axis
     
     try:
-        big_axis.set(153, 7)                                    # attempt to set ramp divisor - parameter 153 and 154 only exist on tmcm-1180
+        big_axis.set(153, 7)                                    # attempt to set ramp divisor
         big_axis.set(154, 3)                                    # attempt to set pulse divisor
         
     except:                                                     # retry with flipped ports if error occurs
-        sm_mot,sm_axis = create('/dev/ttyACM0',1,10240,5120,135,20) 
+        sm_mot,sm_axis = create('/dev/ttyACM0',1,10240,5120,152,20) 
         big_mot,big_axis = create('/dev/ttyACM1',1,1343,440,64,8)
         big_axis.set(153, 7)
         big_axis.set(154, 3)
