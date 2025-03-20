@@ -195,9 +195,18 @@ def submit():
     except:
         app.error('Error','Invalid cycle entry')                        # display popup box with error icon
         return
+
+    big_current = int(int(big_current_mA.value)/1000/5.5*255)
     
     big_axis.set(6, big_current)
     sm_axis.set(6, sm_current)
+    big_axis.set(7, 1)
+    
+    bigCurrent_chk = big_axis.get(6)
+    print('current in axis register = ', bigCurrent_chk)
+    print('current limit from gui = ', big_current)
+    standby_chk = big_axis.get(7)
+    print('standby current setting = ', standby_chk)
 
     if sm_mot_on.value == True and sm_dependent.value == False:         # if small motor checked and not dependent,
         try:
@@ -297,8 +306,9 @@ def submit():
         done_text.hide()                                                # hide test finished text
     elif pause == True:                                                 # if test is paused,
         reset()                                                         # call reset function
+        
 
-
+    
 def mot_activity():
     if sm_mot_on.value & big_mot_on.value == True:                      # if both motors checked,
         sm_speed.enable()                                               # enable all inputs
@@ -547,9 +557,10 @@ big_end_angle = Text(big_mot_box, text='End angle:', height='2', size=-12)      
 big_end = Slider(big_mot_box, start='-110', end='110', width='fill', enabled=False) # big motor end angle slider input (initially disabled)
 
 big_current_lim_txt = Text(big_mot_box, text='Current Limit (mA):', height='2', size=-12)
-big_current_mA = Slider(big_mot_box, start='0', end='2500', width='fill', 
+big_current_mA = Slider(big_mot_box, start='0', end='1200', width='fill', 
                        enabled=True)                                                 # 255 is max rated current of driver (5.5A RMS for TMCM1180 (big motor), 6A for TMCM1260)
-big_current = int(big_current_mA.value/1000/5.5*255)
+
+
 
 app.display()                                                                       # method displaying app on the screen
 
