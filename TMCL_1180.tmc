@@ -9,6 +9,22 @@ pattern = 4
 finish = 5
 ready = 6
 done = 7
+intermediate = 8
+interCount = 9
+
+
+VECT 0, TIMER0					//DEFINE INTERRUPT HANDLING ROUTINE (TYPE 0 FOR TIMER 0, LABEL 'TIMER0')
+SGP 0, 3, 300					//set global parameter 0 (timer 0 period) in bank 3 (interrups) to 300ms
+
+TIMER0:							//INTERRUPT HANDLING ROUTINE
+	CCO intermediate, 0			//capture current coordinate to coordinate slot titled 'intermediate'
+	GCO intermediate, 0			//get intermediate coordinate into accumulator
+	AGP intermediate, 2			//write accumulator to user variable titled 'intermediate'
+	GGP interCount, 2			// get number of interrupt instances in accumulator
+	CALC ADD, 1					//add 1 to the count
+	AGP interCount, 2			//write new count to global variable intercount
+	RETI						//end interrupt 
+
 
 // get the speed and update axis parameter 4
 
@@ -48,6 +64,7 @@ STOP				//end program
 
 SoloTest:
 	MVP COORD, 0, end 			// move motor zero to end coords
+	EI 255						//ENABLE ALL INTERRUPTS
 	WAIT POS, 0, 0				//wait until motor 0 gets to target position, <timeout value>
 	MVP COORD, 0, begin			//move motor zero to begin coordinates
 	GGP cycles, 2				//get global parameter titled cycles from bank 2
@@ -58,6 +75,8 @@ SoloTest:
 	GGP finish, 2				// get global variable titled finish from bankk 2
 	COMP 1					// compare finish variable with 1
 	JC EQ, Exit				// if equal to 1, exit
+	SGP interCount, 2, 0	//reset intermediate count to 0
+	DI 255					// DISABLE ALL INTERRUPTS
 	JA SoloTest				// otherwise perform soloTest again
 
 // run first in two motor test

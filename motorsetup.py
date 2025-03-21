@@ -34,8 +34,8 @@ def start ():
         big_axis.set(154, 3)                                    # attempt to set pulse divisor
         
     except:                                                     # retry with flipped ports if error occurs
-        sm_mot,sm_axis = create('/dev/ttyACM0',1,10240,5120,152,20) 
-        big_mot,big_axis = create('/dev/ttyACM1',1,1343,440,64,8)
+        sm_mot,sm_axis = create('/dev/ttyACM0',1,10240,5120,152,20) #max speed divided by 256microsteps * 200steps -> 12rpm for 10240
+        big_mot,big_axis = create('/dev/ttyACM1',1,1343,440,64,8)   #1343 max speed, with pulse divisor 3 = 48 rpm - max speed value is 2047
         big_axis.set(153, 7)
         big_axis.set(154, 3)
         

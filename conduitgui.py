@@ -69,6 +69,9 @@ def two_motor():
 def one_motor(motor,axis):
     global total
     check = motor.get_user_var(varCycles)                                       # get user variable 3 (cycles check)
+    intermediatePos = motor.get_user_var(varIntermediate)
+    intermediateCount = motor.get_user_var(varInterCount)
+    print('intermediate position = ', intermediatePos,', count = ',intermediateCount)
     if check >= total:                                                  # if cycles check is greater than or equal to total test cycles,
         motor.set_user_var(varFinish,1)                                         # set user variable 5 to one (finished flag)
         sm_mot_on.enable()                                              # enable motor status checkboxes
@@ -95,7 +98,7 @@ def start():
         if sm_on == True and big_on == False:                           # if starting small motor test,
             sm_mot.send(129,0,0,0)                                      # start small motor application
             solo = True
-            app.repeat(250,one_motor,[sm_mot,sm_axis])                  # schedule call to one-motor test function
+            app.repeat(250,one_motor,[sm_mot,sm_axis])                  # schedule call to one-motor test function which checks whether the cycle count is done         
         elif sm_on == False and big_on == True:                         # if starting big motor test,
             big_mot.send(129,0,0,0)                                     # start big motor application
             solo = True
@@ -183,6 +186,8 @@ varPattern = 4
 varFinish = 5
 varReady = 6
 varDone = 7
+varIntermediate = 8
+varInterCount = 9
 
 
 def submit():
