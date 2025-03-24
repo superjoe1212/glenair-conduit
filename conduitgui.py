@@ -29,6 +29,9 @@ switch.when_released = all_stop                                         # set up
 
 def two_motor():
     global sm_finished,big_finished,total
+    sm_intermediatePos = sm_axis.get(varIntermediate)*1.5/256/abs(sm_start.value-sm_end.value)
+    big_intermediatePos = big_axis.get(varIntermediate)*1.5/256/4/abs(big_start.value-big_end.value)
+    print('smPos = ',sm_intermediatePos,'bigPos = ',big_intermediatePos)
     sm_done = sm_mot.get_user_var(varDone)                                   # get small motor user variable 7 (ready flag)
     if sm_done == 1:                                                   # if small motor ready,
         big_mot.set_user_var(varReady,1)                                       # set big motor user variable 6 to one (done flag)
@@ -69,9 +72,8 @@ def two_motor():
 def one_motor(motor,axis):
     global total
     check = motor.get_user_var(varCycles)                                       # get user variable 3 (cycles check)
-    intermediatePos = motor.get_user_var(varIntermediate)
-    intermediateCount = motor.get_user_var(varInterCount)
-    print('intermediate position = ', intermediatePos,', count = ',intermediateCount)
+    intermediatePos = axis.get(varIntermediate)*1.5/256/4                       #1.5 deg per step, 256 microsteps per step, 4 motor rotations per arm rotation
+    print('intermediate position = ', intermediatePos)
     if check >= total:                                                  # if cycles check is greater than or equal to total test cycles,
         motor.set_user_var(varFinish,1)                                         # set user variable 5 to one (finished flag)
         sm_mot_on.enable()                                              # enable motor status checkboxes
@@ -186,8 +188,8 @@ varPattern = 4
 varFinish = 5
 varReady = 6
 varDone = 7
-varIntermediate = 8
-varInterCount = 9
+varIntermediate = 1                 #AXIS PARAMETER 1 IS ACTUAL POSITION (PER STEP COUNT)
+#varInterCount = 9
 
 
 def submit():
@@ -258,11 +260,11 @@ def submit():
         sm_speed_text.show()                                            # show small motor speed text
         sm_start_text.value = 'Start angle: ' + str(sm_start.value)     # update small motor start angle text
         sm_start_text.show()                                            # show small motor start angle text
-        sm_start_pos = -int(sm_start.value)*142.222                     # calculate small motor start position
+        sm_start_pos = int(sm_start.value)*142.222                     # calculate small motor start position
         sm_mot.set_user_var(varBegin,int(sm_start_pos))                        # set small motor user variable 1 to start position
         sm_end_text.value = 'End angle: ' + str(sm_end.value)           # update small motor end angle text
         sm_end_text.show()                                              # show small motor end angle text
-        sm_end_pos = -int(sm_end.value)*142.222                         # calculate small motor end position
+        sm_end_pos = int(sm_end.value)*142.222                         # calculate small motor end position
         sm_mot.set_user_var(varEnd,int(sm_end_pos))                          # set small motor user variable 2 to end position
         sm_mot.set_user_var(varPattern,0)                                        # set small motor user variable 4 to zero (no test pattern)
         sm_on = True
@@ -314,7 +316,7 @@ def submit():
         done_text.hide()                                                # hide test finished text
     elif pause == True:                                                 # if test is paused,
         reset()                                                         # call reset function
-        
+
 
     
 def mot_activity():
