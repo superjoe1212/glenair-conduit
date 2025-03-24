@@ -203,10 +203,11 @@ def submit():
 
     big_current = int(int(big_current_mA.value)/1000/5.5*255)
     sm_current = int(int(sm_current_mA.value)/1000/6*255)
-
+    big_hold_current = int(int(big_hold_current_mA.value)/1000/6*255)
+    
     big_axis.set(6, big_current)
     sm_axis.set(6, sm_current)
-    big_axis.set(7, 1)
+    big_axis.set(7, big_hold_current)
     sm_axis.set(7,8)                                                  #sets the standby current (holding torque)
     
     bigCurrent_chk = big_axis.get(6)
@@ -563,10 +564,13 @@ big_start = Slider(big_mot_box, start='-110', end='110', width='fill',          
 big_end_angle = Text(big_mot_box, text='End angle:', height='2', size=-12)          # big motor end angle input text
 big_end = Slider(big_mot_box, start='-110', end='110', width='fill', enabled=False) # big motor end angle slider input (initially disabled)
 
-big_current_lim_txt = Text(big_mot_box, text='Current Limit (mA):', height='2', size=-12)
+big_current_lim_txt = Text(big_mot_box, text='Current Limit (mA):', height='2',
+                           size=-12)
 big_current_mA = Slider(big_mot_box, start='10', end='1200', width='fill', 
-                       enabled=True)                                                 # 255 is max rated current of driver (5.5A RMS for TMCM1180 (big motor), 6A for TMCM1260)
-
+                       enabled=True)                                       # 255 is max rated current of driver (5.5A RMS for TMCM1180 (big motor), 6A for TMCM1260)
+big_hold_current_txt = Text(big_mot_box, text='Holding Current (mA):', height='2',size=-12)
+big_hold_current_mA = Slider(big_mot_box, start='0', end='250',width='fill',
+                             enabled=True)
 
 
 app.display()                                                                       # method displaying app on the screen
