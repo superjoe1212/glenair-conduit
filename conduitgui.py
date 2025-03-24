@@ -207,7 +207,7 @@ def submit():
     big_axis.set(6, big_current)
     sm_axis.set(6, sm_current)
     big_axis.set(7, 1)
-    sm_axis.set(7,1)                                                  #sets the standby current (holding torque)
+    sm_axis.set(7,8)                                                  #sets the standby current (holding torque)
     
     bigCurrent_chk = big_axis.get(6)
     print('current in axis register = ', bigCurrent_chk)
