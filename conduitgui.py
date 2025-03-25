@@ -26,12 +26,22 @@ switch = Button(13)                                                     # create
 switch.when_pressed = e_stop                                            # set up function to call when switched
 switch.when_released = all_stop                                         # set up function to call when released
 
+def sync():
+
+    sm_intermediatePos = int(sm_axis.get(varIntermediate)*1.5/256/abs(sm_start.value-sm_end.value)*100)
+    big_intermediatePos = int(big_axis.get(varIntermediate)*1.5/256/4/abs(big_start.value-big_end.value)*100)
+    #print(sm_intermediatePos, big_intermediatePos)
+    if sm_intermediatePos > 0 and big_intermediatePos > 0:
+        speedMult = (sm_intermediatePos/big_intermediatePos-1)*0.2+1
+        #print('position ratio = ',speedMult)
+        big_axis.set(4,int(bigspeed*111.848*speedMult))               # set big motor user variable 0 to big motor speed
+        sm_axis.set(4,int(smspeed*853.33/speedMult))
+            
 
 def two_motor():
     global sm_finished,big_finished,total
-    sm_intermediatePos = int(sm_axis.get(varIntermediate)*1.5/256/abs(sm_start.value-sm_end.value)*100)
-    big_intermediatePos = int(big_axis.get(varIntermediate)*1.5/256/4/abs(big_start.value-big_end.value)*100)
-    print('smPos = ',sm_intermediatePos,'bigPos = ',big_intermediatePos)
+    sync()
+    
     sm_done = sm_mot.get_user_var(varDone)                                   # get small motor user variable 7 (ready flag)
     if sm_done == 1:                                                   # if small motor ready,
         big_mot.set_user_var(varReady,1)                                       # set big motor user variable 6 to one (done flag)
@@ -180,7 +190,7 @@ def reset():
         pause = False
     done_text.hide()                                                    # hide test finished text
 
-varSpeed = 0
+varSpeed = 0                    #user parameters (global variables)
 varBegin = 1
 varEnd = 2
 varCycles = 3
@@ -193,7 +203,7 @@ varIntermediate = 1                 #AXIS PARAMETER 1 IS ACTUAL POSITION (PER ST
 
 
 def submit():
-    global sm_on,big_on,total,pause
+    global sm_on,big_on,total,pause, bigspeed, smspeed
     try:
         total = int(cycles.value)                                       # attempt to convert test cycles into integer
         if total <= 0:                                                  # if total test cycles is less than or equal to zero,
