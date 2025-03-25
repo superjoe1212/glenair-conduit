@@ -32,7 +32,7 @@ def sync():
     big_intermediatePos = int(big_axis.get(varIntermediate)*1.5/256/4/abs(big_start.value-big_end.value)*100)
     #print(sm_intermediatePos, big_intermediatePos)
     if sm_intermediatePos > 0 and big_intermediatePos > 0:
-        speedMult = (sm_intermediatePos/big_intermediatePos-1)*0.2+1
+        speedMult = (sm_intermediatePos/big_intermediatePos-1)*int(gain_slider.value)/100+1
         #print('position ratio = ',speedMult)
         big_axis.set(4,int(bigspeed*111.848*speedMult))               # set big motor user variable 0 to big motor speed
         sm_axis.set(4,int(smspeed*853.33/speedMult))
@@ -119,7 +119,7 @@ def start():
             sm_mot.send(129,0,0,0)                                      # start motor applications
             big_mot.send(129,0,0,0)
             dual = True
-            app.repeat(150,two_motor)                                   # schedule call to two-motor test function
+            app.repeat(int(syncInterval.value),two_motor)                                   # schedule call to two-motor test function
     elif pause == True:                                                 # if test is paused,
         if sm_on == True:                                               # if continuing small motor test,
             sm_mot.send(129,0,0,0)                                      # start small motor application
@@ -543,6 +543,14 @@ submit_button.bg = 'light gray'
 blank_4 = Text(submit_box, size=-12)                                                # spacer
 
 
+control_box = Box(app, height='fill', width='fill', align='left')   
+gain_txt = Text(control_box, text='gain', height='2',
+                           size=-12)
+gain_slider = Slider(control_box, start='0', end='100',
+                             enabled=True)  
+syncInterval_txt = Text(control_box,text = 'sync interval (ms):', height = '2',size=-12)
+syncInterval = TextBox(control_box, text='250', enabled=True)  
+
 sm_mot_box = Box(app, height='fill', width='fill', align='left')                    # box containing small motor parameter inputs
 sm_mot_box.bg = 'sky blue'
 sm_mot_on = CheckBox(sm_mot_box, text='Small motor active ', command=mot_activity)  # small motor status checkbox input calls motor activity function
@@ -553,7 +561,7 @@ sm_speed.tk.config(justify='center')                                            
 sm_dependent = CheckBox(sm_mot_box, text='Speed dependent', command=dependent,      # small motor speed dependent checkbox input (initially disabled)
                         args=['small'], enabled=False)          
 sm_start_angle = Text(sm_mot_box, text='Start angle:', height='2', size=-12)        # small motor start angle input text
-sm_start = Slider(sm_mot_box, start='0', end='360', width='fill', enabled=False)    # small motor start angle slider input (initially disabled)
+sm_start = Slider(sm_mot_box, start='0', end='360',width = 'fill', enabled=False)    # small motor start angle slider input (initially disabled)
 sm_end_angle = Text(sm_mot_box, text='End angle:', height='2', size=-12)            # small motor end angle input text
 sm_end = Slider(sm_mot_box, start='0', end='360', width='fill', enabled=False)      # small motor end angle slider input (initially disabled)
 
@@ -563,6 +571,7 @@ sm_current_mA = Slider(sm_mot_box, start='0', end='3500', width='fill',
 sm_hold_current_txt = Text(sm_mot_box, text='Holding Current (mA):', height='2',size=-12)
 sm_hold_current_mA = Slider(sm_mot_box, start='0', end='500',width='fill',
                              enabled=True)
+
 
 big_mot_box = Box(app, height='fill', width='fill', align='right')                  # box containing big motor parameter inputs
 big_mot_box.bg = 'sky blue'
@@ -584,8 +593,9 @@ big_current_lim_txt = Text(big_mot_box, text='Current Limit (mA):', height='2',
 big_current_mA = Slider(big_mot_box, start='10', end='1200', width='fill', 
                        enabled=True)                                       # 255 is max rated current of driver (5.5A RMS for TMCM1180 (big motor), 6A for TMCM1260)
 big_hold_current_txt = Text(big_mot_box, text='Holding Current (mA):', height='2',size=-12)
-big_hold_current_mA = Slider(big_mot_box, start='0', end='250',width='fill',
-                             enabled=True)
+big_hold_current_mA = Slider(big_mot_box, start='0', end='250',width='fill',enabled=True)
+
+                           
 
 
 app.display()                                                                       # method displaying app on the screen
