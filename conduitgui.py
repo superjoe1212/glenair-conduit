@@ -27,7 +27,7 @@ switch.when_pressed = e_stop                                            # set up
 switch.when_released = all_stop                                         # set up function to call when released
 
 def sync():
-
+#the speed multiplier needs to reverse somehow when the motors are returning to their begin positions!!!!!!
     sm_intermediatePos = int(sm_axis.get(varIntermediate)*1.5/256/abs(sm_start.value-sm_end.value)*100)
     big_intermediatePos = int(big_axis.get(varIntermediate)*1.5/256/4/abs(big_start.value-big_end.value)*100)
     #print(sm_intermediatePos, big_intermediatePos)

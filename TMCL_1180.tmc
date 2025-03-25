@@ -49,19 +49,17 @@ STOP				//end program
 
 SoloTest:
 	MVP COORD, 0, end 			// move motor zero to end coords
-	EI 255						//ENABLE ALL INTERRUPTS
 	WAIT POS, 0, 0				//wait until motor 0 gets to target position, <timeout value>
 	MVP COORD, 0, begin			//move motor zero to begin coordinates
+	WAIT POS, 0, 0				// wait until motor 0 reaches target position
 	GGP cycles, 2				//get global parameter titled cycles from bank 2
 	CALC ADD, 1				// add 1 to cycle count
 	AGP cycles, 2				//write new cycle count to bank 2 variable titled ' cycles'
-	WAIT POS, 0, 0				// wait until motor 0 reaches target position
+
 	WAIT TICKS, 0, 30			// have motor 0 wait 30 ticks (300 milliseconds)
 	GGP finish, 2				// get global variable titled finish from bankk 2
 	COMP 1					// compare finish variable with 1
 	JC EQ, Exit				// if equal to 1, exit
-	SGP interCount, 2, 0	//reset intermediate count to 0
-	DI 255					// DISABLE ALL INTERRUPTS
 	JA SoloTest				// otherwise perform soloTest again
 
 // run first in two motor test
