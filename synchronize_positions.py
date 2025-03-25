@@ -1,0 +1,15 @@
+#synchronize
+
+import conduitgui
+def sync():
+
+    varIntermediate = 1
+
+    sm_intermediatePos = conduitgui.sm_axis.get(varIntermediate)*1.5/256/abs(sm_start.value-sm_end.value)
+    big_intermediatePos = conduitgui.big_axis.get(varIntermediate)*1.5/256/4/abs(big_start.value-big_end.value)
+
+    sm_pos_ratio = sm_intermediatePos*1.5/256/abs(conduitgui.sm_start.value-conduitgui.sm_end.value)
+    big_pos_ratio = big_intermediatePos*1.5/256/4/abs(conduitgui.big_start.value-conduitgui.big_end.value)
+
+    speedMult = sm_pos_ratio/big_pos_ratio
+    
