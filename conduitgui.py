@@ -31,11 +31,18 @@ def sync():
     sm_intermediatePos = int(sm_axis.get(varIntermediate)*1.5/256/abs(sm_start.value-sm_end.value)*100)
     big_intermediatePos = int(big_axis.get(varIntermediate)*1.5/256/4/abs(big_start.value-big_end.value)*100)
     #print(sm_intermediatePos, big_intermediatePos)
-    if sm_intermediatePos > 0 and big_intermediatePos > 0:
+    
+    bigSpeedAct = big_axis.get(varActSpeed)
+    smSpeedAct = sm_axis.get(varActSpeed)
+
+    if sm_intermediatePos > 0 and big_intermediatePos > 0 and bigSpeedAct > 0.8 *bigspeed and smSpeedAct > 0.8 * smspeed:
         speedMult = (sm_intermediatePos/big_intermediatePos-1)*int(gain_slider.value)/100+1
         #print('position ratio = ',speedMult)
-        big_axis.set(4,int(bigspeed*111.848*speedMult))               # set big motor user variable 0 to big motor speed
-        sm_axis.set(4,int(smspeed*853.33/speedMult))
+        bigspeed = int(bigspeed*speedMult)
+        smspeed = int(smspeed/speedMult)
+        
+        big_axis.set(4,bigspeed)               # set big motor user variable 0 to big motor speed
+        sm_axis.set(4,smspeed)
             
 
 def two_motor():
@@ -199,6 +206,7 @@ varFinish = 5
 varReady = 6
 varDone = 7
 varIntermediate = 1                 #AXIS PARAMETER 1 IS ACTUAL POSITION (PER STEP COUNT)
+varActSpeed = 3
 #varInterCount = 9
 
 
@@ -251,16 +259,16 @@ def submit():
             return
     if sm_dependent.value == True:                                      # if small motor speed dependent,
         try:                                                            # attempt to calculate small motor speed
-            smspeed = float(big_speed.value)*abs(sm_start.value-sm_end.value)/abs(big_start.value-big_end.value)
-            sm_mot.set_user_var(varSpeed,int(smspeed*853.33))                  # set small motor user variable 0 to small motor speed
+            smspeed = 853.33 * float(big_speed.value)*abs(sm_start.value-sm_end.value)/abs(big_start.value-big_end.value)
+            sm_mot.set_user_var(varSpeed,int(smspeed))                  # set small motor user variable 0 to small motor speed
             sm_speed.value = str(round(smspeed,3))                      # update small motor speed input text
         except:
             app.error('Error','Invalid angle entry')                    # display popup box with error icon
             return
     elif big_dependent.value == True:                                   # if big motor speed dependent,
         try:                                                            # attempt to calculate big motor speed
-            bigspeed = float(sm_speed.value)*abs(big_start.value-big_end.value)/abs(sm_start.value-sm_end.value)
-            big_mot.set_user_var(varSpeed,int(bigspeed*111.848))               # set big motor user variable 0 to big motor speed
+            bigspeed = 111.848 * float(sm_speed.value)*abs(big_start.value-big_end.value)/abs(sm_start.value-sm_end.value)
+            big_mot.set_user_var(varSpeed,int(bigspeed))               # set big motor user variable 0 to big motor speed
             big_speed.value = str(round(bigspeed,3))                    # update big motor speed input text
         except:
             app.error('Error','Invalid angle entry')                    # display popup box with error icon
