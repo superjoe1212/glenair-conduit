@@ -28,35 +28,58 @@ switch.when_released = all_stop                                         # set up
 
 def sync():
 #the speed multiplier needs to reverse somehow when the motors are returning to their begin positions!!!!!!
-    sm_intermediatePos = int(sm_axis.get(varIntermediate)*1.5/256/abs(sm_start.value-sm_end.value)*100)
-    big_intermediatePos = int(big_axis.get(varIntermediate)*1.5/256/4/abs(big_start.value-big_end.value)*100)
+    #sm_intermediatePos = int(sm_axis.get(varIntermediate)*1.5/256/abs(sm_start.value-sm_end.value)*100)             #output motor position in percentage of target
+    sm_intermediatePos = int(abs(sm_axis.get(varIntermediate)-sm_start_pos)/abs(sm_start_pos-sm_end_pos)*100)             #output motor position in percentage of target
+
+    #big_intermediatePos = int(big_axis.get(varIntermediate)*1.5/256/4/abs(big_start.value-big_end.value)*100)
+    big_intermediatePos = int(abs(big_axis.get(varIntermediate)-big_start_pos)/abs(big_start_pos-big_end_pos)*100)
     #print(sm_intermediatePos, big_intermediatePos)
     
-    bigSpeedAct = big_axis.get(varActSpeed)
+    bigSpeedAct = big_axis.get(varActSpeed)                                          #output current motor speed (pulls axis parameter 3)
     smSpeedAct = sm_axis.get(varActSpeed)
 
-    if sm_intermediatePos > 0 and big_intermediatePos > 0 and bigSpeedAct > 0.8 *bigspeed and smSpeedAct > 0.8 * smspeed:
-        speedMult = (sm_intermediatePos/big_intermediatePos-1)*int(gain_slider.value)/100+1
+    if sm_intermediatePos > 0 and big_intermediatePos > 0 and bigSpeedAct > 0.8 * bigspeed and smSpeedAct > 0.8 * smspeed: #checks if motion of both motors has started and accelerated to 80% of speed limit
+        speedMult = (sm_intermediatePos/big_intermediatePos-1)*int(gain_slider.value)/100+1         #outputs a value greater than 0 - if small position ratio is larger than big pos ratio, multiplier is >1
         #print('position ratio = ',speedMult)
-        bigspeed = int(bigspeed*speedMult)
-        smspeed = int(smspeed/speedMult)
-        
-        big_axis.set(4,bigspeed)               # set big motor user variable 0 to big motor speed
-        sm_axis.set(4,smspeed)
+        if big_dependent.value == True:
+            bigspeed = int(bigspeed*speedMult)
+            big_axis.set(4,bigspeed)               # set big motor user variable 0 to big motor speed
+        if sm_dependent.value == True:
+            smspeed = int(smspeed/speedMult)
+            sm_axis.set(4,smspeed)
+
             
+global smDoneChg, bigDoneChg                        #create variable (outside of 2-motor function) to determine if done flags have changed
+smDoneChg = 1
+bigDoneChg = 1
 
 def two_motor():
     global sm_finished,big_finished,total
     sync()
     
-    sm_done = sm_mot.get_user_var(varDone)                                   # get small motor user variable 7 (ready flag)
-    if sm_done == 1:                                                   # if small motor ready,
-        big_mot.set_user_var(varReady,1)                                       # set big motor user variable 6 to one (done flag)
+    sm_done = sm_mot.get_user_var(varDone)                                   # get small motor user variable 7 (done flag)
     
-    big_done = big_mot.get_user_var(varDone)                                 # get big motor user variable 7 (ready flag)
-    if big_done == 1:                                                  # if big motor ready,
-        sm_mot.set_user_var(varReady,1)                                        # set small motor user variable 6 to one (done flag)
-    
+    if sm_done == 1:                                                   # if small motor done,
+        big_mot.set_user_var(varReady,1)                                       # set big motor user variable 6 to one (ready flag)
+        if smDoneChg == 1:                                                     # if the done flag just changed,
+            newstart = sm_end_pos                                                   #swap start and end positions for the sync program
+            sm_end_pos = sm_start_pos
+            sm_start_pos = newstart
+            smDoneChg = 0                                                      #remove change flag 
+    else:                                                               #if small motor done flag is off, change flag is on
+        smDoneChg = 1
+
+    big_done = big_mot.get_user_var(varDone)                                 # get big motor user variable 7 (done flag)
+    if big_done == 1:                                                  # if big motor done,
+        sm_mot.set_user_var(varReady,1)                                        # set small motor user variable 6 to one (ready flag)
+        if bigDoneChg == 1:
+            newstart = big_end_pos
+            big_end_pos = big_start_pos
+            big_start_pos = newstart
+            bigDoneChg = 0
+    else:
+        bigDoneChg = 1
+
     sm_check = sm_mot.get_user_var(varCycles)                                   # get small motor user variable 3 (cycles check)
     if sm_check >= total:                                               # if cycles check is greater than or equal to total test cycles,
         sm_mot.set_user_var(varFinish,1)                                        # set small motor user variable 5 to one (finished flag)
@@ -121,7 +144,7 @@ def start():
         elif sm_on == False and big_on == True:                         # if starting big motor test,
             big_mot.send(129,0,0,0)                                     # start big motor application
             solo = True
-            app.repeat(250,one_motor,[big_mot,big_axis])                # schedule call to one-motor test function
+            app.repeat(250,one_motor,[big_mot,big_axis])                # schedule call to one-motor test function every 250ms
         else:                                                           # if starting two-motor test,
             sm_mot.send(129,0,0,0)                                      # start motor applications
             big_mot.send(129,0,0,0)
@@ -211,7 +234,7 @@ varActSpeed = 3
 
 
 def submit():
-    global sm_on,big_on,total,pause, bigspeed, smspeed
+    global sm_on,big_on,total,pause, bigspeed, smspeed, sm_start_pos, sm_end_pos, big_start_pos, big_end_pos
     try:
         total = int(cycles.value)                                       # attempt to convert test cycles into integer
         if total <= 0:                                                  # if total test cycles is less than or equal to zero,
@@ -221,7 +244,7 @@ def submit():
         app.error('Error','Invalid cycle entry')                        # display popup box with error icon
         return
 
-    big_current = int(int(big_current_mA.value)/1000/5.5*255)
+    big_current = int(int(big_current_mA.value)/1000/5.5*255)           #set current limit from gui slider (mA conversion to motor driver range of 1-255 for max driver rating 5.5A)
     sm_current = int(int(sm_current_mA.value)/1000/6*255)
     big_hold_current = int(int(big_hold_current_mA.value)/1000/5.5*255)
     sm_hold_current = int(int(sm_hold_current_mA.value)/1000/6*255)
@@ -261,7 +284,7 @@ def submit():
         try:                                                            # attempt to calculate small motor speed
             smspeed = 853.33 * float(big_speed.value)*abs(sm_start.value-sm_end.value)/abs(big_start.value-big_end.value)
             sm_mot.set_user_var(varSpeed,int(smspeed))                  # set small motor user variable 0 to small motor speed
-            sm_speed.value = str(round(smspeed,3))                      # update small motor speed input text
+            sm_speed.value = str(round((smspeed/853.33),3))                      # update small motor speed input text
         except:
             app.error('Error','Invalid angle entry')                    # display popup box with error icon
             return
@@ -269,7 +292,7 @@ def submit():
         try:                                                            # attempt to calculate big motor speed
             bigspeed = 111.848 * float(sm_speed.value)*abs(big_start.value-big_end.value)/abs(sm_start.value-sm_end.value)
             big_mot.set_user_var(varSpeed,int(bigspeed))               # set big motor user variable 0 to big motor speed
-            big_speed.value = str(round(bigspeed,3))                    # update big motor speed input text
+            big_speed.value = str(round((bigspeed/111.848),3))                    # update big motor speed input text
         except:
             app.error('Error','Invalid angle entry')                    # display popup box with error icon
             return
