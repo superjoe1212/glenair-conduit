@@ -27,6 +27,7 @@ switch.when_pressed = e_stop                                            # set up
 switch.when_released = all_stop                                         # set up function to call when released
 
 def sync():
+    global bigspeed, smspeed
 #the speed multiplier needs to reverse somehow when the motors are returning to their begin positions!!!!!!
     #sm_intermediatePos = int(sm_axis.get(varIntermediate)*1.5/256/abs(sm_start.value-sm_end.value)*100)             #output motor position in percentage of target
     sm_intermediatePos = int(abs(sm_axis.get(varIntermediate)-sm_start_pos)/abs(sm_start_pos-sm_end_pos)*100)             #output motor position in percentage of target
@@ -47,6 +48,9 @@ def sync():
         if sm_dependent.value == True:
             smspeed = int(smspeed/speedMult)
             sm_axis.set(4,smspeed)
+        print("small speed = ",int(smspeed) ,"| big speed = ", int(bigspeed), " | speedmult = ",round(speedMult,2), " | sm pos = ", sm_intermediatePos, " |big pos = ", big_intermediatePos)  
+    
+
 
             
 global smDoneChg, bigDoneChg                        #create variable (outside of 2-motor function) to determine if done flags have changed
@@ -89,6 +93,7 @@ def two_motor():
     if big_check >= total:                                              # if cycles check is greater than or equal to total test cycles,
         big_mot.set_user_var(varFinish,1)                                       # set big motor user variable 5 to one (finished flag)
         big_finished = True
+    print("cycle count small = ", sm_check," big = ",big_check)
     if sm_finished and big_finished == True:                                    # if both motors finished,                  
         sm_mot_on.enable()                                              # enable motor status checkboxes
         big_mot_on.enable()
@@ -113,7 +118,8 @@ def one_motor(motor,axis):
     global total
     check = motor.get_user_var(varCycles)                                       # get user variable 3 (cycles check)
     intermediatePos = axis.get(varIntermediate)*1.5/256/4                       #1.5 deg per step, 256 microsteps per step, 4 motor rotations per arm rotation
-    print('intermediate position = ', intermediatePos)
+    #print('intermediate position = ', intermediatePos)
+    print("cycles = ", check)
     if check >= total:                                                  # if cycles check is greater than or equal to total test cycles,
         motor.set_user_var(varFinish,1)                                         # set user variable 5 to one (finished flag)
         sm_mot_on.enable()                                              # enable motor status checkboxes
@@ -359,8 +365,6 @@ def submit():
     elif pause == True:                                                 # if test is paused,
         reset()                                                         # call reset function
 
-
-    
 def mot_activity():
     if sm_mot_on.value & big_mot_on.value == True:                      # if both motors checked,
         sm_speed.enable()                                               # enable all inputs
