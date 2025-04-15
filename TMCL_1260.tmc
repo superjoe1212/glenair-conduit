@@ -50,10 +50,11 @@ SoloTest:
 	MVP COORD, 0, end
 	WAIT POS, 0, 0
 	MVP COORD, 0, begin
+	WAIT POS, 0, 0
 	GGP cycles, 2
 	CALC ADD, 1
 	AGP cycles, 2
-	WAIT POS, 0, 0
+	
 	WAIT TICKS, 0, 30
 	GGP finish, 2
 	COMP 1
