@@ -11,6 +11,8 @@ ready = 6
 done = 7
 
 
+SAP 138, 0, 0		//set to ramp mode to position mode (axis 0, option 0)
+
 // get the speed and update axis parameter 4
 
 GGP speed, 2  	//get user variable 0 from variable bank 2
@@ -22,7 +24,7 @@ GGP begin, 2  		//get user variable 1 from variable bank 2
 ACO begin, 0		//save user variable to coordinate bank, coordinate labeled 'begin'
 
 GGP end, 2 		//get user variable 2
-ACO end, 0		//set ending coordinate - set actual position of motor 0 to a slot in the memory titled 'end'
+ACO end, 0		//set ending coordinate - set actual position of motor 0 to a slot in the coordinate memory titled 'end'
 
 // initialize motor
 
@@ -109,10 +111,10 @@ DualTest:
 	MVP COORD, 0, begin			//move back to begin coords
 	WAIT POS, 0, 0				
 	SGP done, 2, 1				//mark done var to 1
-	CSUB Poll				//call subroutine 'poll' to check for 'ready' signal
 	GGP cycles, 2				//get cycle count
 	CALC ADD, 1				//add 1
 	AGP cycles, 2				//write new cycle count
+	CSUB Poll				//call subroutine 'poll' to check for 'ready' signal
 	WAIT TICKS, 0, 30			//wait 30
 	GGP finish, 2				
 	COMP 1					
